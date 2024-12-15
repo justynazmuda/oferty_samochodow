@@ -12,3 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r setup, include=FALSE}
 test
 ```
+
+```{r setup, include=FALSE}
+test v2
+```
