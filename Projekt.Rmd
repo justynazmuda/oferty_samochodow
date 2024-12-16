@@ -9,10 +9,67 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r setup, include=FALSE}
-test
+## Wstęp
+
+Celem niniejszego raportu jest analiza braków danych w zbiorze danych `samochody_new`. Analiza obejmuje liczbę braków danych, procent braków w poszczególnych kolumnach, a także wzorce braków oraz wizualizacje przedstawiające brakujące wartości w danych.
+
+## Instalacja i Wczytanie niezbędnych bibliotek oraz danych
+
+#Wczytanie oraz instalacja bibliotek
+
+```{r}
+
+install.packages("finalfit")
+install.packages("mice")
+install.packages("naniar")
+install.packages("VIM")
+install.packages("Amelia")
+
+library(finalfit)
+library(mice)
+library(naniar)
+library(VIM)
+library(Amelia)
+
 ```
 
-```{r setup, include=FALSE}
-test v2
+#Wczytanie danych
+
+```{r}
+samochody_new <- read.csv("samochody_new.csv", stringsAsFactors = FALSE)
 ```
+
+##Sprawdzenie czy w danych są braki
+
+###Liczba braków danych w  każdej kolumnie
+
+```{r missing-values-count}
+# Liczba braków danych
+print("Liczba braków danych w każdej kolumnie:")
+colSums(is.na(samochody_new))
+```
+
+### Procent braków danych w każdej kolumnie
+
+
+```{r missing-values-percent}
+# Procent braków danych
+print("Procent braków danych w każdej kolumnie:")
+colMeans(is.na(samochody_new)) * 100
+```
+
+##Wzorce braków danych
+
+```{r}
+print("Macierz wzorców braków danych:")
+md.pattern(samochody_new) 
+
+gg_miss_fct(x = samochody_new, fct = year)
+
+gg_miss_upset(samochody_new)
+
+missmap(samochody_new)
+md.pattern(samochody_new)
+
+```
+
