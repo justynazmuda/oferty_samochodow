@@ -73,9 +73,3 @@ md.pattern(samochody_new)
 
 ```
 
-
-
-
-
-
-
