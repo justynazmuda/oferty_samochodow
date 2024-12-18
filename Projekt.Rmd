@@ -41,7 +41,7 @@ samochody_new <- read.csv("samochody_new.csv", stringsAsFactors = FALSE)
 
 ##Sprawdzenie czy w danych są braki
 
-###Liczba braków danych w  każdej kolumnie
+###Liczba braków danych w każdej kolumnie
 
 ```{r missing-values-count}
 # Liczba braków danych
@@ -50,7 +50,6 @@ colSums(is.na(samochody_new))
 ```
 
 ### Procent braków danych w każdej kolumnie
-
 
 ```{r missing-values-percent}
 # Procent braków danych
@@ -73,28 +72,80 @@ md.pattern(samochody_new)
 
 ```
 
-##Czyszczenie danych
+##Czyszczenie danych 
 #Wczytanie oraz instalacja bibliotek
 
 ```{r}
 
-install.packages("tidyverse")
-install.packages("dlookr")
 install.packages("editrules")
 install.packages("deducorrect")
 install.packages("ISLR")
+install.packages("dplyr")
 
 
-library(tidyverse)
-library(dlookr)
 library(editrules)
 library(deducorrect)
 library(ISLR)
 
-tidyr::extract()
-base::transform()
+```
 
-dlookr::transform()
-dlookr::extract()
+#Wykrywanie braków danych
+
+```{r}
+
+sum(complete.cases(samochody_new))
+nrow(samochody_new[complete.cases(samochody_new), ]) / nrow(samochody_new)*100
+ 
+
+is.special <- function(x){
+  if (is.numeric(x)) !is.finite(x) else is.na(x)
+}
+
+sapply(samochody_new, is.special)
+
+for (n in colnames(samochody_new)){
+  is.na(samochody_new[[n]]) <- is.special(samochody_new[[n]])
+}
+summary(samochody_new)
 
 ```
+
+#Sprawdzanie i naprawa spójności danych 
+```{r}
+library(dplyr)
+
+samochody_new_rules <- samochody_new %>%
+  filter(nchar(brand) > 2) %>%
+  filter(price_in_pln > 0) %>%
+  filter(grepl("km", mileage)) %>%
+  filter(grepl("^[a-zA-Z]+$", fuel_type)) %>%
+  filter(year >= 1995) %>%
+  filter(year<= 2024)
+
+print(samochody_new_rules)
+View(samochody_new_rules)
+
+zlamania <- samochody_new %>%
+  summarise(
+    Regula1 = sum(nchar(brand) <= 2),   
+    Regula2 = sum(price_in_pln <= 0), 
+    Regula3 = sum(!grepl("km", mileage)),                   
+    Regula4 = sum(!grepl("^[a-zA-Z]+$", fuel_type)), 
+    Regula5 = sum(year < 1995), 
+    Regula6 = sum(year > 2024)
+  )
+print(zlamania)
+
+zlamania_procentowo <- samochody_new %>%
+  summarise(
+    Regula1 = sum(nchar(brand) <= 2) / n()*100,   
+    Regula2 = sum(price_in_pln <= 0) / n()*100, 
+    Regula3 = sum(!grepl("km", mileage)) / n()*100,                   
+    Regula4 = sum(!grepl("^[a-zA-Z]+$", fuel_type)) / n()*100, 
+    Regula5 = sum(year < 1995) / n()*100, 
+    Regula6 = sum(year > 2024) / n()*100
+  )
+print(zlamania_procentowo)
+
+```
+
