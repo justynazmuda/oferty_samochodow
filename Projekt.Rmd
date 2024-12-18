@@ -73,3 +73,28 @@ md.pattern(samochody_new)
 
 ```
 
+##Czyszczenie danych
+#Wczytanie oraz instalacja bibliotek
+
+```{r}
+
+install.packages("tidyverse")
+install.packages("dlookr")
+install.packages("editrules")
+install.packages("deducorrect")
+install.packages("ISLR")
+
+
+library(tidyverse)
+library(dlookr)
+library(editrules)
+library(deducorrect)
+library(ISLR)
+
+tidyr::extract()
+base::transform()
+
+dlookr::transform()
+dlookr::extract()
+
+```
