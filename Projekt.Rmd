@@ -72,8 +72,7 @@ md.pattern(samochody_new)
 
 ```
 
-##Czyszczenie danych 
-#Wczytanie oraz instalacja bibliotek
+##Czyszczenie danych #Wczytanie oraz instalacja bibliotek
 
 ```{r}
 
@@ -110,7 +109,8 @@ summary(samochody_new)
 
 ```
 
-#Sprawdzanie i naprawa spójności danych 
+#Sprawdzanie i naprawa spójności danych
+
 ```{r}
 library(dplyr)
 
@@ -149,3 +149,24 @@ print(zlamania_procentowo)
 
 ```
 
+# Usuwanie wartości odstających dla wszystkich kolumn numerycznych
+
+```{r, include=FALSE}
+library(dplyr)
+samochody_final <- samochody_new_rules %>%
+  rowwise() %>%
+  mutate(
+    is_outlier = any(across(where(is.numeric), ~ . < quantile(., 0.25, na.rm = TRUE) - 1.5 * IQR(.) |
+                               . > quantile(., 0.75, na.rm = TRUE) + 1.5 * IQR(.)))
+  ) %>%
+  ungroup() %>%
+  filter(!is_outlier) %>%
+  select(-is_outlier)
+```
+
+# Podgląd wynikowego zbioru danych
+
+```{r, include=TRUE}
+print(samochody_final)
+write.csv(samochody_final, "samochody_final.csv", row.names = FALSE)
+```
