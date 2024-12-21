@@ -170,3 +170,15 @@ samochody_final <- samochody_new_rules %>%
 print(samochody_final)
 write.csv(samochody_final, "samochody_final.csv", row.names = FALSE)
 ```
+
+#Wizualizacja danych 
+#1.Cena samochodu zależna od marki 
+#2.Cena samochodu zależna od daty wyprodukowania 
+#3.Cena samochodu zależna od przebiegu 
+#4.Cena samochodu zależna od pojemności silnika
+#5.Średnia cena samochodu w województwie
+#6.Średnia cena samochodu w zależności od miasta
+
+```{r}
+
+```
