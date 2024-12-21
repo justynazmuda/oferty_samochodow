@@ -1,23 +1,19 @@
 ---
 title: "Projekt"
-author: "Justyna Zmuda"
+author: "Justyna Zmuda, Aleksandra Goczyska, Aurelia Sudoł"
 date: "2024-11-23"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## Wstęp
+# Wstęp
 
 Celem niniejszego raportu jest analiza braków danych w zbiorze danych `samochody_new`. Analiza obejmuje liczbę braków danych, procent braków w poszczególnych kolumnach, a także wzorce braków oraz wizualizacje przedstawiające brakujące wartości w danych.
 
-## Instalacja i Wczytanie niezbędnych bibliotek oraz danych
+# Instalacja i Wczytanie niezbędnych bibliotek oraz danych
 
-#Wczytanie oraz instalacja bibliotek
+## Wczytanie oraz instalacja bibliotek - Aleksandra
 
-```{r}
+```{r include=FALSE}
 
 install.packages("finalfit")
 install.packages("mice")
@@ -33,17 +29,17 @@ library(Amelia)
 
 ```
 
-#Wczytanie danych
+## Wczytanie danych
 
 ```{r}
 samochody_new <- read.csv("samochody_new.csv", stringsAsFactors = FALSE)
 ```
 
-##Sprawdzenie czy w danych są braki
+## Sprawdzenie czy w danych są braki
 
-###Liczba braków danych w każdej kolumnie
+### Liczba braków danych w każdej kolumnie
 
-```{r missing-values-count}
+```{r missing-values-count, echo=TRUE}
 # Liczba braków danych
 print("Liczba braków danych w każdej kolumnie:")
 colSums(is.na(samochody_new))
@@ -51,15 +47,15 @@ colSums(is.na(samochody_new))
 
 ### Procent braków danych w każdej kolumnie
 
-```{r missing-values-percent}
+```{r missing-values-percent, echo=TRUE}
 # Procent braków danych
 print("Procent braków danych w każdej kolumnie:")
 colMeans(is.na(samochody_new)) * 100
 ```
 
-##Wzorce braków danych
+## Wzorce braków danych
 
-```{r}
+```{r echo=TRUE}
 print("Macierz wzorców braków danych:")
 md.pattern(samochody_new) 
 
@@ -72,9 +68,11 @@ md.pattern(samochody_new)
 
 ```
 
-##Czyszczenie danych #Wczytanie oraz instalacja bibliotek
+# Czyszczenie danych - Aurelia
 
-```{r}
+## Wczytanie oraz instalacja bibliotek
+
+```{r include=FALSE}
 
 install.packages("editrules")
 install.packages("deducorrect")
@@ -88,9 +86,9 @@ library(ISLR)
 
 ```
 
-#Wykrywanie braków danych
+## Wykrywanie braków danych
 
-```{r}
+```{r echo=TRUE}
 
 sum(complete.cases(samochody_new))
 nrow(samochody_new[complete.cases(samochody_new), ]) / nrow(samochody_new)*100
@@ -109,9 +107,9 @@ summary(samochody_new)
 
 ```
 
-#Sprawdzanie i naprawa spójności danych
+## Sprawdzanie i naprawa spójności danych
 
-```{r}
+```{r echo=TRUE}
 library(dplyr)
 
 samochody_new_rules <- samochody_new %>%
@@ -124,7 +122,9 @@ samochody_new_rules <- samochody_new %>%
 
 print(samochody_new_rules)
 View(samochody_new_rules)
+```
 
+```{r echo=TRUE}
 zlamania <- samochody_new %>%
   summarise(
     Regula1 = sum(nchar(brand) <= 2),   
@@ -135,7 +135,9 @@ zlamania <- samochody_new %>%
     Regula6 = sum(year > 2024)
   )
 print(zlamania)
+```
 
+```{r echo=TRUE}
 zlamania_procentowo <- samochody_new %>%
   summarise(
     Regula1 = sum(nchar(brand) <= 2) / n()*100,   
@@ -146,12 +148,13 @@ zlamania_procentowo <- samochody_new %>%
     Regula6 = sum(year > 2024) / n()*100
   )
 print(zlamania_procentowo)
-
 ```
 
-# Usuwanie wartości odstających dla wszystkich kolumn numerycznych
+# Wartości odstające - Justyna
 
-```{r, include=FALSE}
+## Usuwanie wartości odstających dla wszystkich kolumn numerycznych
+
+```{r echo=TRUE}
 library(dplyr)
 samochody_final <- samochody_new_rules %>%
   rowwise() %>%
@@ -164,9 +167,9 @@ samochody_final <- samochody_new_rules %>%
   select(-is_outlier)
 ```
 
-# Podgląd wynikowego zbioru danych
+## Podgląd wynikowego zbioru danych
 
-```{r, include=TRUE}
+```{r echo=TRUE}
 print(samochody_final)
 write.csv(samochody_final, "samochody_final.csv", row.names = FALSE)
 ```
