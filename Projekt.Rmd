@@ -171,13 +171,42 @@ print(samochody_final)
 write.csv(samochody_final, "samochody_final.csv", row.names = FALSE)
 ```
 
-#Wizualizacja danych 
+##Wizualizacja danych 
 #1.Cena samochodu zależna od marki 
+```{r}
+install.packages("ggplot2")
+library(ggplot2)
+ggplot(samochody_final, aes(x= brand, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
+  labs(
+    tittle = "Cena samochodu w zależności od marki",
+    x = "Marka samochodu",
+    y = "Cena samochodu (w PLN)"
+  ) +
+  theme_minimal()
+
+```
+
+
 #2.Cena samochodu zależna od daty wyprodukowania 
+```{r}
+install.packages("ggplot2")
+library(ggplot2)
+ggplot(samochody_final, aes(x= year, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
+  labs(
+    tittle = "Cena samochodu w zależności od marki",
+    x = "Rok wyprodukowania",
+    y = "Cena samochodu (w PLN)"
+  ) +
+  theme_minimal()
+
+```
+
 #3.Cena samochodu zależna od przebiegu 
 #4.Cena samochodu zależna od pojemności silnika
 #5.Średnia cena samochodu w województwie
 #6.Średnia cena samochodu w zależności od miasta
+
+
 
 ```{r}
 
