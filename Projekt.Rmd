@@ -202,7 +202,32 @@ ggplot(samochody_final, aes(x= year, y= price_in_pln)) + geom_boxplot(fill = "pi
 ```
 
 #3.Cena samochodu zależna od przebiegu 
+
+```{r echo=TRUE}
+library(ggplot2)
+ggplot(samochody_final, aes(x= mileage, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
+  labs(
+    tittle = "Cena samochodu w zależności od przebiegu",
+    x = "przebieg",
+    y = "Cena samochodu (w PLN)"
+  ) +
+ theme_minimal()
+```
+
 #4.Cena samochodu zależna od pojemności silnika
+
+```{r echo=TRUE}
+library(ggplot2)
+ggplot(samochody_final, aes(x= engine_capacity, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
+  labs(
+    tittle = "Cena samochodu w zależności od pojemności silnika",
+    x = "pojemność silnika",
+    y = "Cena samochodu (w PLN)"
+  ) +
+ theme_minimal()
+```
+
+
 #5.Średnia cena samochodu w województwie
 #6.Średnia cena samochodu w zależności od miasta
 
