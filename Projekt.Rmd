@@ -33,6 +33,11 @@ library(Amelia)
 
 ```{r}
 samochody_new <- read.csv("samochody_new.csv", stringsAsFactors = FALSE)
+if (file.exists("samochody_new.csv")) {
+  samochody_final <- read.csv("samochody_new.csv")
+} else {
+  stop("Plik 'samochody_new.csv' nie został znaleziony.")
+}
 ```
 
 ## Sprawdzenie czy w danych są braki
@@ -124,6 +129,24 @@ print(samochody_new_rules)
 View(samochody_new_rules)
 ```
 
+## Czyszczenie reginów niebędących polskimi województwami
+
+```{r}
+polskie_wojewodztwa <- c(
+  "Dolnośląskie", "Kujawsko-Pomorskie", "Lubelskie", 
+  "Lubuskie", "Łódzkie", "Małopolskie", "Mazowieckie", 
+  "Opolskie", "Podkarpackie", "Podlaskie", "Pomorskie", 
+  "Śląskie", "Świętokrzyskie", "Warmińsko-Mazurskie", 
+  "Wielkopolskie", "Zachodniopomorskie"
+)
+if (!"voivodeship" %in% colnames(samochody_new_rules)) {
+  stop("Kolumna 'voivodeship' nie istnieje w danych.")
+}
+samochody_new_rules <- samochody_new_rules[samochody_new_rules$voivodeship %in% polskie_wojewodztwa, ]
+print(head(samochody_new_rules))
+
+```
+
 ```{r echo=TRUE}
 zlamania <- samochody_new %>%
   summarise(
@@ -150,6 +173,10 @@ zlamania_procentowo <- samochody_new %>%
 print(zlamania_procentowo)
 ```
 
+```{r}
+
+```
+
 # Wartości odstające - Justyna
 
 ## Usuwanie wartości odstających dla wszystkich kolumn numerycznych
@@ -172,10 +199,18 @@ samochody_final <- samochody_new_rules %>%
 ```{r echo=TRUE}
 print(samochody_final)
 write.csv(samochody_final, "samochody_final.csv", row.names = FALSE)
+if (file.exists("samochody_final.csv")) {
+  samochody_final <- read.csv("samochody_final.csv")
+} else {
+  stop("Plik 'samochody_final.csv' nie został znaleziony.")
+}
+
 ```
 
-##Wizualizacja danych 
-#1.Cena samochodu zależna od marki 
+# Wizualizacja danych
+
+## 1. Cena samochodu zależna od marki
+
 ```{r}
 install.packages("ggplot2")
 library(ggplot2)
@@ -189,8 +224,8 @@ ggplot(samochody_final, aes(x= brand, y= price_in_pln)) + geom_boxplot(fill = "p
 
 ```
 
+## 2. Cena samochodu zależna od daty wyprodukowania
 
-#2.Cena samochodu zależna od daty wyprodukowania 
 ```{r}
 install.packages("ggplot2")
 library(ggplot2)
@@ -204,7 +239,7 @@ ggplot(samochody_final, aes(x= year, y= price_in_pln)) + geom_boxplot(fill = "pi
 
 ```
 
-#3.Cena samochodu zależna od przebiegu 
+## 3. Cena samochodu zależna od przebiegu
 
 ```{r echo=TRUE}
 library(ggplot2)
@@ -217,7 +252,7 @@ ggplot(samochody_final, aes(x= mileage, y= price_in_pln)) + geom_boxplot(fill = 
  theme_minimal()
 ```
 
-#4.Cena samochodu zależna od pojemności silnika
+## 4. Cena samochodu zależna od pojemności silnika
 
 ```{r echo=TRUE}
 library(ggplot2)
@@ -230,12 +265,52 @@ ggplot(samochody_final, aes(x= engine_capacity, y= price_in_pln)) + geom_boxplot
  theme_minimal()
 ```
 
-
-#5.Średnia cena samochodu w województwie
-#6.Średnia cena samochodu w zależności od miasta
-
-
+## 5. Średnia cena samochodu w województwie
 
 ```{r}
+library(ggplot2)
+ggplot(samochody_final, aes(x = voivodeship, y = price_in_pln, color = voivodeship, group = voivodeship)) +
+  geom_line(linewidth = 1) +
+  geom_point(linewidth = 2) +
+  labs(
+    title = "Zmiany cen samochodów w zależności od województw",
+    x = "Województwo",
+    y = "Cena samochodu (PLN)",
+    color = "Województwo"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    axis.title = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
 
 ```
+
+Wykres pokazuje rozpiętość cen samochodów w różnych województwach w Polsce. Można zauważyć, że województwa o bardziej rozwiniętym rynku samochodowym, takie jak Mazowieckie, Małopolskie, i Śląskie, charakteryzują się najwyższymi cenami.Województwa takie jak Lubuskie, Podlaskie, i Świętokrzyskie mają znacznie niższe ceny samochodów, co może wynikać z mniejszego popytu lub braku dostępu do luksusowych modeli. Wysokość słupków wskazuje na różnorodność cen w każdym województwie. Przykładowo, Mazowieckie i Małopolskie mają większe rozpiętości cen, co może wynikać z większego rynku oraz dostępności zarówno tanich, jak i drogich modeli.
+
+## 6. 15 miast z najwyższymi cenami samochodów
+
+```{r}
+data_top15 <- samochody_final[order(-samochody_final$price_in_pln), ][1:15, ]
+ggplot(data_top15, aes(x = reorder(city, -price_in_pln), y = price_in_pln, fill = city)) +
+  geom_col() +
+  labs(
+    title = "15 miast z najwyższymi cenami samochodów",
+    x = "Miasto",
+    y = "Cena samochodu (PLN)",
+    fill = "Miasto"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+
+```
+
+Wśród miast przedstawionych na wykresie, Warszawa wyróżnia się jako miasto z najwyższą średnią ceną samochodów. Może to być związane z wyższą siłą nabywczą mieszkańców stolicy oraz większym zapotrzebowaniem na pojazdy luksusowe.Miasta takie jak Katowice i Poznań mają również wysokie ceny samochodów, co wskazuje na dużą liczbę transakcji w pojazdów. Lubartów oraz Wschowa znajdują się w dolnej części wykresu, co sugeruje, że ceny samochodów w tych miastach są niższe w porównaniu do pozostałych.
