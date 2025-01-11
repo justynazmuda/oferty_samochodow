@@ -20,12 +20,18 @@ install.packages("mice")
 install.packages("naniar")
 install.packages("VIM")
 install.packages("Amelia")
+install.packages("psych")
+install.packages("qwraps2")
+install.packages("corrplot")
+
 
 library(finalfit)
 library(mice)
 library(naniar)
 library(VIM)
 library(Amelia)
+library(qwraps2)
+library(corrplot)
 
 ```
 
@@ -314,3 +320,47 @@ ggplot(data_top15, aes(x = reorder(city, -price_in_pln), y = price_in_pln, fill 
 ```
 
 Wśród miast przedstawionych na wykresie, Warszawa wyróżnia się jako miasto z najwyższą średnią ceną samochodów. Może to być związane z wyższą siłą nabywczą mieszkańców stolicy oraz większym zapotrzebowaniem na pojazdy luksusowe.Miasta takie jak Katowice i Poznań mają również wysokie ceny samochodów, co wskazuje na dużą liczbę transakcji w pojazdów. Lubartów oraz Wschowa znajdują się w dolnej części wykresu, co sugeruje, że ceny samochodów w tych miastach są niższe w porównaniu do pozostałych.
+
+#Statystyki opisowe
+
+```{r kable_report2, echo=TRUE, message=FALSE, warning=FALSE, results='asis'}
+library(psych)
+raport <-
+  list("Cena w PLN" =
+       list("Min"= ~ min(price_in_pln),
+            "Max"= ~ max(price_in_pln),
+            "Kwartyl dolny"= ~ quantile(price_in_pln,0.25),
+            "Mediana"= ~ round(median(price_in_pln),2),
+            "Kwartyl górny"= ~ quantile(price_in_pln,0.75),
+            "Średnia"= ~ round(mean(price_in_pln),2),
+            "Odch. std."= ~ round(sd(price_in_pln),2),
+            "Odch. std. w %"=~round((sd(price_in_pln)/mean(price_in_pln)),2),
+            "Skośność"=~round(skew(price_in_pln),2),
+            "Kurtoza"=~round(kurtosi(price_in_pln),2)
+            ))
+tabela<-summary_table(samochody_final, summaries = raport, by = c("brand"))
+```
+
+```{r}
+install.packages("gtsummary")
+library(gtsummary)
+samochody_final %>%
+  select(price_in_pln,brand) %>%
+  tbl_summary(
+    by=brand,
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}","{mean}","{sd}",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}"),
+    missing = "no",
+    label = price_in_pln ~ "Cena") %>%
+  modify_header(label ~ "**Zmienna**") %>%
+  modify_caption("**Tabela 1. Zmiana cen według marki**") %>%
+  bold_labels() %>% 
+  add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2))
+```
+
+
+
+
