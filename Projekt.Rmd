@@ -1,8 +1,16 @@
 ---
-title: "Projekt"
+title: "Oferty samochodów"
 author: "Justyna Zmuda, Aleksandra Goczyska, Aurelia Sudoł"
 date: "2024-11-23"
 output: html_document
+header-includes:
+  - |
+    <style>
+      h1 { color: #461220; }
+      h2 { color: #8c2f39; }
+      h3 { color: #b23a48; }
+      h4 { color: #fcb9b2; }
+    </style>
 ---
 
 # Wstęp
@@ -11,7 +19,9 @@ Celem niniejszego raportu jest analiza braków danych w zbiorze danych `samochod
 
 # Instalacja i Wczytanie niezbędnych bibliotek oraz danych
 
-## Wczytanie oraz instalacja bibliotek - Aleksandra
+## Wczytanie oraz instalacja bibliotek 
+
+Krok pierwszy to zainstalowanie bibliotek potrzebnych do prawidłowego wykonania analizy.
 
 ```{r include=FALSE}
 
@@ -37,7 +47,9 @@ library(corrplot)
 
 ## Wczytanie danych
 
-```{r}
+Nasętpnym krokiem jest wczytanie danych, które po wyczyszczeniu będą bazą do przeprowadzenia analizy.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 samochody_new <- read.csv("samochody_new.csv", stringsAsFactors = FALSE)
 if (file.exists("samochody_new.csv")) {
   samochody_final <- read.csv("samochody_new.csv")
@@ -50,7 +62,9 @@ if (file.exists("samochody_new.csv")) {
 
 ### Liczba braków danych w każdej kolumnie
 
-```{r missing-values-count, echo=TRUE}
+Sprawdzenie czy w kolumnach występują braki danych
+
+```{r missing-values-count, echo=TRUE, message=FALSE, warning=FALSE}
 # Liczba braków danych
 print("Liczba braków danych w każdej kolumnie:")
 colSums(is.na(samochody_new))
@@ -58,7 +72,9 @@ colSums(is.na(samochody_new))
 
 ### Procent braków danych w każdej kolumnie
 
-```{r missing-values-percent, echo=TRUE}
+Obliczenie procentowego udziału braków danych w każdej kolumnie analizowanego pliku.
+
+```{r missing-values-percent, echo=TRUE, message=FALSE, warning=FALSE}
 # Procent braków danych
 print("Procent braków danych w każdej kolumnie:")
 colMeans(is.na(samochody_new)) * 100
@@ -66,7 +82,7 @@ colMeans(is.na(samochody_new)) * 100
 
 ## Wzorce braków danych
 
-```{r echo=TRUE}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 print("Macierz wzorców braków danych:")
 md.pattern(samochody_new) 
 
@@ -79,11 +95,13 @@ md.pattern(samochody_new)
 
 ```
 
-# Czyszczenie danych - Aurelia
+# Czyszczenie danych
 
 ## Wczytanie oraz instalacja bibliotek
 
-```{r include=FALSE}
+Instalowanie bibliotek potrzebnych do dalszej analizy.
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
 
 install.packages("editrules")
 install.packages("deducorrect")
@@ -99,7 +117,9 @@ library(ISLR)
 
 ## Wykrywanie braków danych
 
-```{r echo=TRUE}
+Identyfikacja, lokalizacja oraz cena skali braków w danych.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 
 sum(complete.cases(samochody_new))
 nrow(samochody_new[complete.cases(samochody_new), ]) / nrow(samochody_new)*100
@@ -120,7 +140,9 @@ summary(samochody_new)
 
 ## Sprawdzanie i naprawa spójności danych
 
-```{r echo=TRUE}
+Identyfikacja problemów z niespójnością danych oraz metody naprawy tak aby analiza była rzetelna i wiarygodna.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(dplyr)
 
 samochody_new_rules <- samochody_new %>%
@@ -137,7 +159,9 @@ View(samochody_new_rules)
 
 ## Czyszczenie reginów niebędących polskimi województwami
 
-```{r}
+W posidadanych danych znajdują się miasta spoza granic Polski. W naszej analizie chcemy się skupić na danych z polskich województw, więc pozostałe dane zostaną usunięte.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 polskie_wojewodztwa <- c(
   "Dolnośląskie", "Kujawsko-Pomorskie", "Lubelskie", 
   "Lubuskie", "Łódzkie", "Małopolskie", "Mazowieckie", 
@@ -153,7 +177,7 @@ print(head(samochody_new_rules))
 
 ```
 
-```{r echo=TRUE}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 zlamania <- samochody_new %>%
   summarise(
     Regula1 = sum(nchar(brand) <= 2),   
@@ -179,15 +203,13 @@ zlamania_procentowo <- samochody_new %>%
 print(zlamania_procentowo)
 ```
 
-```{r}
-
-```
-
-# Wartości odstające - Justyna
+# Wartości odstające
 
 ## Usuwanie wartości odstających dla wszystkich kolumn numerycznych
 
-```{r echo=TRUE}
+Wartości odstające zaburzają rzetelność analizy, więc powinny zostać usunięte.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(dplyr)
 samochody_final <- samochody_new_rules %>%
   rowwise() %>%
@@ -202,7 +224,9 @@ samochody_final <- samochody_new_rules %>%
 
 ## Podgląd wynikowego zbioru danych
 
-```{r echo=TRUE}
+Sprawdzanie jak wygląda finalny plik z wyczyczonymi danymi i zapisanie ich do osobnego pliku, który będzie użyty w analizie.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 print(samochody_final)
 write.csv(samochody_final, "samochody_final.csv", row.names = FALSE)
 if (file.exists("samochody_final.csv")) {
@@ -217,7 +241,7 @@ if (file.exists("samochody_final.csv")) {
 
 ## 1. Cena samochodu zależna od marki
 
-```{r}
+```{r echo=TRUE, message=FALSE, warning=FALSE, error = FALSE}
 install.packages("ggplot2")
 library(ggplot2)
 ggplot(samochody_final, aes(x= brand, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
@@ -230,9 +254,11 @@ ggplot(samochody_final, aes(x= brand, y= price_in_pln)) + geom_boxplot(fill = "p
 
 ```
 
+INTERPRETACJA WYKRESU!
+
 ## 2. Cena samochodu zależna od daty wyprodukowania
 
-```{r}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 install.packages("ggplot2")
 library(ggplot2)
 ggplot(samochody_final, aes(x= year, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
@@ -245,9 +271,11 @@ ggplot(samochody_final, aes(x= year, y= price_in_pln)) + geom_boxplot(fill = "pi
 
 ```
 
+INTERPRETACJA WYKRSU!!
+
 ## 3. Cena samochodu zależna od przebiegu
 
-```{r echo=TRUE}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(ggplot2)
 ggplot(samochody_final, aes(x= mileage, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
   labs(
@@ -258,9 +286,11 @@ ggplot(samochody_final, aes(x= mileage, y= price_in_pln)) + geom_boxplot(fill = 
  theme_minimal()
 ```
 
+INTEPRETACJA WYKRESU!!
+
 ## 4. Cena samochodu zależna od pojemności silnika
 
-```{r echo=TRUE}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(ggplot2)
 ggplot(samochody_final, aes(x= engine_capacity, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
   labs(
@@ -271,42 +301,41 @@ ggplot(samochody_final, aes(x= engine_capacity, y= price_in_pln)) + geom_boxplot
  theme_minimal()
 ```
 
+INTERPRETACJA WYKRESU!!
+
 ## 5. Średnia cena samochodu w województwie
 
-```{r}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(ggplot2)
-ggplot(samochody_final, aes(x = voivodeship, y = price_in_pln, color = voivodeship, group = voivodeship)) +
-  geom_line(linewidth = 1) +
-  geom_point(linewidth = 2) +
+
+ggplot(samochody_final, aes(x = voivodeship, y = price_in_pln, group = voivodeship)) +
+  geom_line(linewidth = 1, color = "pink") +  
+  geom_point(size = 2, color = "red") +    
   labs(
     title = "Zmiany cen samochodów w zależności od województw",
     x = "Województwo",
-    y = "Cena samochodu (PLN)",
-    color = "Województwo"
+    y = "Cena samochodu (PLN)"
   ) +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
     axis.title = element_text(size = 12),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10)
+    legend.position = "none"  
   )
-
 ```
 
 Wykres pokazuje rozpiętość cen samochodów w różnych województwach w Polsce. Można zauważyć, że województwa o bardziej rozwiniętym rynku samochodowym, takie jak Mazowieckie, Małopolskie, i Śląskie, charakteryzują się najwyższymi cenami.Województwa takie jak Lubuskie, Podlaskie, i Świętokrzyskie mają znacznie niższe ceny samochodów, co może wynikać z mniejszego popytu lub braku dostępu do luksusowych modeli. Wysokość słupków wskazuje na różnorodność cen w każdym województwie. Przykładowo, Mazowieckie i Małopolskie mają większe rozpiętości cen, co może wynikać z większego rynku oraz dostępności zarówno tanich, jak i drogich modeli.
 
 ## 6. 15 miast z najwyższymi cenami samochodów
 
-```{r}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 data_top15 <- samochody_final[order(-samochody_final$price_in_pln), ][1:15, ]
-ggplot(data_top15, aes(x = reorder(city, -price_in_pln), y = price_in_pln, fill = city)) +
-  geom_col() +
+ggplot(data_top15, aes(x = reorder(city, price_in_pln), y = price_in_pln)) +
+  geom_col(fill = "pink") +  
   labs(
     title = "15 miast z najwyższymi cenami samochodów",
     x = "Miasto",
-    y = "Cena samochodu (PLN)",
-    fill = "Miasto"
+    y = "Cena samochodu (PLN)"
   ) +
   theme_minimal() +
   theme(
@@ -316,34 +345,55 @@ ggplot(data_top15, aes(x = reorder(city, -price_in_pln), y = price_in_pln, fill 
     legend.title = element_text(size = 12),
     legend.text = element_text(size = 10)
   )
-
 ```
 
 Wśród miast przedstawionych na wykresie, Warszawa wyróżnia się jako miasto z najwyższą średnią ceną samochodów. Może to być związane z wyższą siłą nabywczą mieszkańców stolicy oraz większym zapotrzebowaniem na pojazdy luksusowe.Miasta takie jak Katowice i Poznań mają również wysokie ceny samochodów, co wskazuje na dużą liczbę transakcji w pojazdów. Lubartów oraz Wschowa znajdują się w dolnej części wykresu, co sugeruje, że ceny samochodów w tych miastach są niższe w porównaniu do pozostałych.
 
-#Statystyki opisowe
-
-```{r kable_report2, echo=TRUE, message=FALSE, warning=FALSE, results='asis'}
-library(psych)
-raport <-
-  list("Cena w PLN" =
-       list("Min"= ~ min(price_in_pln),
-            "Max"= ~ max(price_in_pln),
-            "Kwartyl dolny"= ~ quantile(price_in_pln,0.25),
-            "Mediana"= ~ round(median(price_in_pln),2),
-            "Kwartyl górny"= ~ quantile(price_in_pln,0.75),
-            "Średnia"= ~ round(mean(price_in_pln),2),
-            "Odch. std."= ~ round(sd(price_in_pln),2),
-            "Odch. std. w %"=~round((sd(price_in_pln)/mean(price_in_pln)),2),
-            "Skośność"=~round(skew(price_in_pln),2),
-            "Kurtoza"=~round(kurtosi(price_in_pln),2)
-            ))
-tabela<-summary_table(samochody_final, summaries = raport, by = c("brand"))
-```
+## 7. Rodzaje paliwa w polskich województwach
 
 ```{r}
+library(ggplot2)
+library(dplyr)
+fuel_data <- samochody_final %>%
+  count(voivodeship, fuel_type)
+fuel_colors <- c(
+  "Benzyna" = "pink",      
+  "Diesel" = "red",        
+  "Hybryda" = "purple",   
+  "Elektryczny" = "maroon" 
+)
+
+ggplot(fuel_data, aes(x = voivodeship, y = n, fill = fuel_type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = fuel_colors) + 
+  labs(
+    title = "Rodzaje paliwa w województwach",
+    x = "Województwo",
+    y = "Liczba pojazdów",
+    fill = "Rodzaj paliwa"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.title = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+
+```
+
+Z wykresu można wyczytać, że benzyna i diesel są najpopularniejszymi rodzajami paliwa w Polsce, a ich dominacja jest wyraźna w każdym województwie. Liczba pojazdów hybrydowych i elektrycznych jest niewielka, ale zauważalna w województwach bogatszych.
+
+# Statystyki opisowe
+
+Stworzenie kolorowej tabeli ze statystykami opisowymi.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 install.packages("gtsummary")
+install.packages("gt")
 library(gtsummary)
+library(gt)
 samochody_final %>%
   select(price_in_pln,brand) %>%
   tbl_summary(
@@ -358,9 +408,19 @@ samochody_final %>%
   modify_header(label ~ "**Zmienna**") %>%
   modify_caption("**Tabela 1. Zmiana cen według marki**") %>%
   bold_labels() %>% 
-  add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2))
+  add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2))%>%
+  as_gt() %>%
+  tab_style(
+    style = list(
+      cell_fill(color = "pink")
+    ),
+    locations = cells_body()
+  ) %>%
+  tab_style(
+    style = list(
+      cell_fill(color = "red"),
+      cell_text(weight = "bold", color = "white")
+    ),
+    locations = cells_column_labels()
+  )
 ```
-
-
-
-
