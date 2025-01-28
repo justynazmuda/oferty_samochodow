@@ -19,7 +19,7 @@ Celem niniejszego raportu jest analiza braków danych w zbiorze danych `samochod
 
 # Instalacja i Wczytanie niezbędnych bibliotek oraz danych
 
-## Wczytanie oraz instalacja bibliotek 
+## Wczytanie oraz instalacja bibliotek
 
 Krok pierwszy to zainstalowanie bibliotek potrzebnych do prawidłowego wykonania analizy.
 
@@ -33,6 +33,8 @@ install.packages("Amelia")
 install.packages("psych")
 install.packages("qwraps2")
 install.packages("corrplot")
+install.packages("dplyr")
+install.packages("ggplot2")
 
 
 library(finalfit)
@@ -42,6 +44,8 @@ library(VIM)
 library(Amelia)
 library(qwraps2)
 library(corrplot)
+library(dplyr)
+library(ggplot2)
 
 ```
 
@@ -241,37 +245,78 @@ if (file.exists("samochody_final.csv")) {
 
 ## 1. Cena samochodu zależna od marki
 
-```{r echo=TRUE, message=FALSE, warning=FALSE, error = FALSE}
-install.packages("ggplot2")
-library(ggplot2)
-ggplot(samochody_final, aes(x= brand, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data_top16 <- samochody_final[order(-samochody_final$price_in_pln), ][1:3, ]
+ggplot(data_top16, aes(x = reorder(brand, price_in_pln), y = price_in_pln)) +
+  geom_col(fill = "pink") +  
   labs(
-    tittle = "Cena samochodu w zależności od marki",
-    x = "Marka samochodu",
-    y = "Cena samochodu (w PLN)"
+    title = "3 marki z najwyższymi cenami samochodów",
+    x = "Marka",
+    y = "Cena samochodu (PLN)"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
+```
+
+Wykres zawiera informacje na temat marek samochodów, które posiadają najwyższe ceny. Wśród producentów zauważamy znaczną przewagę wysokości cen Lamborghini nad pozostałymi markami aut. Cena modelu Aventador S wynosi 2 550 000 zł. Kolejną najdroższą marką jest Ferrari, następnie Mercedes-Benz.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data_top3 <- samochody_final[order(samochody_final$price_in_pln), ][1:3, ]
+
+ggplot(data_top3, aes(x = reorder(brand, price_in_pln), y = price_in_pln)) +
+  geom_col(fill = "darkred") +  
+  labs(
+    title = "3 najtańsze marki samochodów",
+    x = "Marka",
+    y = "Cena samochodu (PLN)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    axis.title = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.title = element_text(size = 12),
+    legend.text = element_text(size = 10)
+  )
 
 ```
 
-INTERPRETACJA WYKRESU!
+Wykres zawiera informacje na temat marek samochodów, które posiadają najniższe ceny. Wśród producentów zauważamy, iż najtańsze auta należą do Opla. Najniższym dostępnym modelem jest Opel Corsa 1.0 Swing 12 v dostępny w cenie 1 111 zł. Kolejną marką, która posiada nieznacznie wyższe ceny jest Deawoo, natomiast trzecim producentem, który posiada najtańsze dostępne auta jest Nissan.
 
 ## 2. Cena samochodu zależna od daty wyprodukowania
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
+
 install.packages("ggplot2")
 library(ggplot2)
-ggplot(samochody_final, aes(x= year, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
+library(dplyr)
+
+top_years <- samochody_final %>%
+  group_by(year) %>%
+  tally() %>%
+  arrange(desc(n)) %>%
+  head(3)
+
+data_top_years <- samochody_final %>%
+  filter(year %in% top_years$year)
+
+ggplot(data_top_years, aes(x = factor(year), y = price_in_pln)) +
+  geom_boxplot(fill = "purple", color = "red") + 
   labs(
-    tittle = "Cena samochodu w zależności od marki",
+    title = "Cena samochodu w zależności od roku wyprodukowania",
     x = "Rok wyprodukowania",
     y = "Cena samochodu (w PLN)"
   ) +
   theme_minimal()
-
 ```
 
-INTERPRETACJA WYKRSU!!
+Wykres zawiera dane, które ukazują, w którym roku zostały wyprodukowane najdroższe dostępne auta. Dostrzegamy, iż najwięcej najdroższych aut zostało wyprodukowanych w latach 2017-2019. W roku 2018 dostrzegamy największe wartości odstające- są to najdroższe z dostępnych aut- Lamborghini Aventador S, których cena wynosi 2 550 000 złotych.
 
 ## 3. Cena samochodu zależna od przebiegu
 
