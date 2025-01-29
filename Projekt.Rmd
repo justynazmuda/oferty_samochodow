@@ -331,7 +331,9 @@ ggplot(samochody_final, aes(x= mileage, y= price_in_pln)) + geom_boxplot(fill = 
  theme_minimal()
 ```
 
-INTEPRETACJA WYKRESU!!
+Większość punktów znajduje się w dolnej części wykresu, co sugeruje, że cena samochodów zazwyczaj mieści się w niższym przedziale, niezależnie od przebiegu.
+Nie widać wyraźnej korelacji – samochody o różnym przebiegu mogą mieć bardzo różne ceny.
+Występują pojedyncze punkty znacznie powyżej większości obserwacji – mogą to być luksusowe lub kolekcjonerskie pojazdy, których cena jest bardzo wysoka, niezależnie od przebiegu.
 
 ## 4. Cena samochodu zależna od pojemności silnika
 
@@ -346,7 +348,12 @@ ggplot(samochody_final, aes(x= engine_capacity, y= price_in_pln)) + geom_boxplot
  theme_minimal()
 ```
 
-INTERPRETACJA WYKRESU!!
+
+Większość samochodów ma stosunkowo niską cenę, niezależnie od pojemności silnika. Widać duże zagęszczenie punktów w dolnej części wykresu.
+Brak wyraźnej liniowej zależności między pojemnością silnika a ceną – cena samochodu nie rośnie wprost proporcjonalnie do pojemności silnika.
+Istnieją pojedyncze punkty w górnej części wykresu, które reprezentują samochody o bardzo wysokiej wartości (np. luksusowe, sportowe lub kolekcjonerskie auta).
+Widać, że droższe samochody częściej mają większą pojemność silnika, ale nie jest to regułą.
+Istnieją też samochody o dużej pojemności, które nie są szczególnie drogie, co może wskazywać na starsze modele lub mniej prestiżowe marki.
 
 ## 5. Średnia cena samochodu w województwie
 
