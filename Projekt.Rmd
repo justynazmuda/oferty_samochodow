@@ -68,14 +68,31 @@ colMeans(is.na(samochody_new)) * 100
 
 ```{r echo=TRUE}
 print("Macierz wzorców braków danych:")
+
+```
+
+```{r echo=TRUE}
+
 md.pattern(samochody_new) 
+
+```
+
+```{r echo=FALSE}
 
 gg_miss_fct(x = samochody_new, fct = year)
 
+
+```
+
+```{r echo=FALSE}
+
 gg_miss_upset(samochody_new)
 
+```
+
+```{r echo=TRUE}
+
 missmap(samochody_new)
-md.pattern(samochody_new)
 
 ```
 
@@ -217,7 +234,7 @@ if (file.exists("samochody_final.csv")) {
 
 ## 1. Cena samochodu zależna od marki
 
-```{r}
+```{r echo=TRUE}
 install.packages("ggplot2")
 library(ggplot2)
 ggplot(samochody_final, aes(x= brand, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
@@ -232,7 +249,7 @@ ggplot(samochody_final, aes(x= brand, y= price_in_pln)) + geom_boxplot(fill = "p
 
 ## 2. Cena samochodu zależna od daty wyprodukowania
 
-```{r}
+```{r echo=TRUE}
 install.packages("ggplot2")
 library(ggplot2)
 ggplot(samochody_final, aes(x= year, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
@@ -257,6 +274,10 @@ ggplot(samochody_final, aes(x= mileage, y= price_in_pln)) + geom_boxplot(fill = 
   ) +
  theme_minimal()
 ```
+Większość punktów znajduje się w dolnej części wykresu, co sugeruje, że cena samochodów zazwyczaj mieści się w niższym przedziale, niezależnie od przebiegu. Nie widać wyraźnej korelacji – samochody o różnym przebiegu mogą mieć bardzo różne ceny co związane jest z dużą ilości innych zmiennych mających wpływ na cenę samochodu jak np. marka samochodu i data produkcji,
+
+Występują pojedyncze punkty znacznie powyżej większości obserwacji – mogą to być luksusowe lub kolekcjonerskie pojazdy, których cena jest bardzo wysoka, niezależnie od przebiegu.
+
 
 ## 4. Cena samochodu zależna od pojemności silnika
 
@@ -271,9 +292,19 @@ ggplot(samochody_final, aes(x= engine_capacity, y= price_in_pln)) + geom_boxplot
  theme_minimal()
 ```
 
+Ogólny trend
+Większość samochodów ma stosunkowo niską cenę, niezależnie od pojemności silnika. Widać duże zagęszczenie punktów w dolnej części wykresu.
+Brak jest wyraźnej liniowej zależności między pojemnością silnika a ceną – cena samochodu nie rośnie wprost proporcjonalnie do pojemności silnika.
+
+Ekstremalne wartości
+
+Istnieją pojedyncze punkty w górnej części wykresu, które reprezentują samochody o bardzo wysokiej wartości (np. luksusowe, sportowe lub kolekcjonerskie auta). Widać, że droższe samochody częściej mają większą pojemność silnika, ale nie jest to regułą.
+Istnieją też samochody o dużej pojemności, które nie są szczególnie drogie, co może wskazywać na starsze modele lub mniej prestiżowe marki.
+
+
 ## 5. Średnia cena samochodu w województwie
 
-```{r}
+```{r echo=TRUE}
 library(ggplot2)
 ggplot(samochody_final, aes(x = voivodeship, y = price_in_pln, color = voivodeship, group = voivodeship)) +
   geom_line(linewidth = 1) +
@@ -360,7 +391,3 @@ samochody_final %>%
   bold_labels() %>% 
   add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2))
 ```
-
-
-
-
