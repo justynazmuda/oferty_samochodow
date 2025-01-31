@@ -14,8 +14,7 @@ header-includes:
 ---
 
 # Wstęp
-
-Celem niniejszego raportu jest analiza braków danych w zbiorze danych `samochody_new`. Analiza obejmuje liczbę braków danych, procent braków w poszczególnych kolumnach, a także wzorce braków oraz wizualizacje przedstawiające brakujące wartości w danych.
+Celem niniejszego raportu jest zbadanie polskiego rynku samochodów na podstawie danych pochodzących z portalu Otomoto.pl. Zbadano jak na cenę auta wpływa nazwa producenta, rok wyprodukowania samochodu oraz przebieg, a także województwo, w którym zostało wystawione na sprzedaż. Raport wykonano na podstawie analizy cen aut oraz ich wybranych cech. Analiza obejmuje liczbę braków danych, procent braków w poszczególnych kolumnach, a także wzorce braków oraz wizualizacje przedstawiające od czego zależy cena wybranych aut. 
 
 # Instalacja i Wczytanie niezbędnych bibliotek oraz danych
 
@@ -35,6 +34,7 @@ install.packages("qwraps2")
 install.packages("corrplot")
 install.packages("dplyr")
 install.packages("ggplot2")
+install.packages("dunn.test")
 
 
 library(finalfit)
@@ -46,6 +46,7 @@ library(qwraps2)
 library(corrplot)
 library(dplyr)
 library(ggplot2)
+library(dunn.test)
 
 ```
 
@@ -331,9 +332,7 @@ ggplot(samochody_final, aes(x= mileage, y= price_in_pln)) + geom_boxplot(fill = 
  theme_minimal()
 ```
 
-Większość punktów znajduje się w dolnej części wykresu, co sugeruje, że cena samochodów zazwyczaj mieści się w niższym przedziale, niezależnie od przebiegu.
-Nie widać wyraźnej korelacji – samochody o różnym przebiegu mogą mieć bardzo różne ceny.
-Występują pojedyncze punkty znacznie powyżej większości obserwacji – mogą to być luksusowe lub kolekcjonerskie pojazdy, których cena jest bardzo wysoka, niezależnie od przebiegu.
+Większość punktów znajduje się w dolnej części wykresu, co sugeruje, że cena samochodów zazwyczaj mieści się w niższym przedziale, niezależnie od przebiegu. Nie widać wyraźnej korelacji – samochody o różnym przebiegu mogą mieć bardzo różne ceny. Występują pojedyncze punkty znacznie powyżej większości obserwacji – mogą to być luksusowe lub kolekcjonerskie pojazdy, których cena jest bardzo wysoka, niezależnie od przebiegu.
 
 ## 4. Cena samochodu zależna od pojemności silnika
 
@@ -348,12 +347,7 @@ ggplot(samochody_final, aes(x= engine_capacity, y= price_in_pln)) + geom_boxplot
  theme_minimal()
 ```
 
-
-Większość samochodów ma stosunkowo niską cenę, niezależnie od pojemności silnika. Widać duże zagęszczenie punktów w dolnej części wykresu.
-Brak wyraźnej liniowej zależności między pojemnością silnika a ceną – cena samochodu nie rośnie wprost proporcjonalnie do pojemności silnika.
-Istnieją pojedyncze punkty w górnej części wykresu, które reprezentują samochody o bardzo wysokiej wartości (np. luksusowe, sportowe lub kolekcjonerskie auta).
-Widać, że droższe samochody częściej mają większą pojemność silnika, ale nie jest to regułą.
-Istnieją też samochody o dużej pojemności, które nie są szczególnie drogie, co może wskazywać na starsze modele lub mniej prestiżowe marki.
+Większość samochodów ma stosunkowo niską cenę, niezależnie od pojemności silnika. Widać duże zagęszczenie punktów w dolnej części wykresu. Brak wyraźnej liniowej zależności między pojemnością silnika a ceną – cena samochodu nie rośnie wprost proporcjonalnie do pojemności silnika. Istnieją pojedyncze punkty w górnej części wykresu, które reprezentują samochody o bardzo wysokiej wartości (np. luksusowe, sportowe lub kolekcjonerskie auta). Widać, że droższe samochody częściej mają większą pojemność silnika, ale nie jest to regułą. Istnieją też samochody o dużej pojemności, które nie są szczególnie drogie, co może wskazywać na starsze modele lub mniej prestiżowe marki.
 
 ## 5. Średnia cena samochodu w województwie
 
@@ -470,9 +464,98 @@ samochody_final %>%
   ) %>%
   tab_style(
     style = list(
-      cell_fill(color = "red"),
+      cell_fill(color = "darkred"),
       cell_text(weight = "bold", color = "white")
     ),
     locations = cells_column_labels()
   )
 ```
+
+```{r}
+library(gtsummary)
+samochody_new_rules %>%
+  select(price_in_pln,year) %>%
+  tbl_summary(
+    by=year,
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}","{mean}","{sd}",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}"),
+    missing = "no",
+    label = price_in_pln ~ "Cena") %>%
+  modify_header(label ~ "**Zmienna**") %>%
+  modify_caption("**Tabela 1. Rozkłąd cen według marki. **") %>%
+  bold_labels() %>% 
+  add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2)) %>%
+as_gt() %>%
+tab_style(
+    style = list(
+      cell_fill(color = "pink")
+    ),
+    locations = cells_body()
+  ) %>%
+  tab_style(
+    style = list(
+      cell_fill(color = "darkred"),
+      cell_text(weight = "bold", color = "white")
+    ),
+    locations = cells_column_labels()
+  )
+```
+## 1. Hipoteza 1 -> marka nie ma wpływu na cenę. 
+H0:  Średnie (lub mediany) cen samochodów są takie same dla wszystkich marek. Marka nie ma wpływu na cenę auta.
+H1: Przynajmniej jedna marka ma inną medianę ceny niż pozostałe. Marka wpływa na cenę auta.
+α = 0,05
+```{r}
+install.packages("nortest")
+library(nortest)
+ad_test <- ad.test(samochody_new_rules$price_in_pln)
+print(ad_test)
+
+```
+```{r}
+library(dunn.test)
+dunn_test <- dunn.test(samochody_new_rules$price_in_pln, samochody_new_rules$brand, method = "bonferroni")
+print(dunn_test)
+library(ggplot2)
+ggplot(samochody_new_rules, aes(x = reorder(brand, price_in_pln, median), y = price_in_pln)) +
+  geom_boxplot() +
+  coord_flip() +
+  ggtitle("Rozkład cen samochodów dla różnych marek") +
+  xlab("Marka") + ylab("Cena w PLN")
+```
+## 2. Hipoteza 2 -> Rok wyprodukwoania auta nie ma wpływu na cenę. 
+H0:  Średnie (lub mediany) cen samochodów są takie same dla wszystkich lat wyprodukowania. Rok wyprodukowania nie ma wpływu na cenę auta.
+H1: Przynajmniej jeden rok wyprodukowania ma inną medianę ceny niż pozostałe. Rok wyprodukowania wpływa na cenę auta.
+α = 0,05
+
+```{r}
+library(dunn.test)
+dunn_test <- dunn.test(samochody_new_rules$price_in_pln, samochody_new_rules$year, method = "bonferroni")
+print(dunn_test)
+library(ggplot2)
+ggplot(samochody_new_rules, aes(x = reorder(year, price_in_pln, median), y = price_in_pln)) +
+  geom_boxplot() +
+  coord_flip() +
+  ggtitle("Rozkład cen samochodów dla różnych lat ich wyprodukowania") +
+  xlab("Rok wyprodukowania") + ylab("Cena w PLN")
+```
+## 3. Hipoteza 3 -> Przebieg auta nie ma wpływu na cenę. 
+H0:  Średnie (lub mediany) cen samochodów są takie same dla wszystkich ilości przebiegu danego auta. Przebieg nie ma wpływu na cenę auta.
+H1: Przynajmniej jeden przebieg ma inną medianę ceny niż pozostałe. Przebieg wpływa na cenę auta.
+α = 0,05
+
+```{r}
+library(dunn.test)
+dunn_test <- dunn.test(samochody_new_rules$price_in_pln, samochody_new_rules$mileage, method = "bonferroni")
+print(dunn_test)
+library(ggplot2)
+ggplot(samochody_new_rules, aes(x = reorder(mileage, price_in_pln, median), y = price_in_pln)) +
+  geom_boxplot() +
+  coord_flip() +
+  ggtitle("Rozkład cen samochodów dla różnych przebiegów") +
+  xlab("Przebieg") + ylab("Cena w PLN")
+```
+# Podsumowanie wniosków.
+Najistotniejszy wpływ na cenę samochodu ma nazwa producenta- marka. Zgodnie z wykresem ukazanym w punkcie Statystyki opisowe- hipoteza 1, dostrzegamy, iż ceny aut marek takich jak Lamborghini, Ferrari czy Aston Martin sięgają powyżej 2 milionów złotych. Rozkłąd cen tych producentów jest szeroki, co sugeruje dużą zmienność w oferowanych modelach. Samochody klasy premium, takie jak Porshe, Land Rover, Mercedes- Benz, BMW i Maserati również charakteryzują się wysokimi cenami swoich samochodów, ale sięgają one średnio w granicy około 1 do 2 milionów złotych. Kolejno dostrzegamy marki popularne, do których należy Toyota, Volkswagen, Hyundai, Mazda czy Kia. Mają one ceny skoncentrowane w niższych przedziałach cenowych, średnio poniżej 1 miliona złotych, do około 300 tysięcy złotych. Poniżej ceny 300 tysięcy złotych zauważamy takie marki jak Daewoo, Citroen, Smart, które należą do grupy najtańszych aut z całego zbioru. Na wykresach hipotez 2 i 3 nie dostrzegamy aż tak wyraźnych różnic między przedziałami, jak w wykresie hipotezy 1. Na rozkład cen aut w zależności od przebiegu czy roku wyprodukowania nie jest tak jednoznaczny, jak wykres rozkładu cen ze względu na markę auta. Rozkład cen dla każdej marki ukazuje występowanie pojedyńczych bardzo drogich modeli aut, których jest niewiele, w porównaniu do aut niskobudżetowych. Zgodnie z wynikami wykresów hipotez, cena auta jest zależna od roku wyprodukowania i przebiegu, natomiast najistotniejszy wpływ na cenę auta ma jego nazwa producenta, czyli marka. 
