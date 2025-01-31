@@ -14,29 +14,16 @@ header-includes:
 ---
 
 # Wstęp
-Celem niniejszego raportu jest zbadanie polskiego rynku samochodów na podstawie danych pochodzących z portalu Otomoto.pl. Zbadano jak na cenę auta wpływa nazwa producenta, rok wyprodukowania samochodu oraz przebieg, a także województwo, w którym zostało wystawione na sprzedaż. Raport wykonano na podstawie analizy cen aut oraz ich wybranych cech. Analiza obejmuje liczbę braków danych, procent braków w poszczególnych kolumnach, a także wzorce braków oraz wizualizacje przedstawiające od czego zależy cena wybranych aut. 
+
+Celem niniejszego raportu jest zbadanie polskiego rynku samochodów na podstawie danych pochodzących z portalu Otomoto.pl. Zbadano jak na cenę auta wpływa nazwa producenta, rok wyprodukowania samochodu oraz przebieg, a także województwo, w którym zostało wystawione na sprzedaż. Raport wykonano na podstawie analizy cen aut oraz ich wybranych cech. Analiza obejmuje liczbę braków danych, procent braków w poszczególnych kolumnach, a także wzorce braków oraz wizualizacje przedstawiające od czego zależy cena wybranych aut.
 
 # Instalacja i Wczytanie niezbędnych bibliotek oraz danych
 
 ## Wczytanie oraz instalacja bibliotek
 
-Krok pierwszy to zainstalowanie bibliotek potrzebnych do prawidłowego wykonania analizy.
+Krok pierwszy to zainstalowanie bibliotek potrzebnych do prawidłowego wykonania analizy. Między innymi – finalfit do modelowania regresji, mice do imputacji braków danych, qwraps2 do raportów statystycznych oraz ggplo2 do tworzenia wykresów potrzebnych do analizy.
 
-```{r include=FALSE}
-
-install.packages("finalfit")
-install.packages("mice")
-install.packages("naniar")
-install.packages("VIM")
-install.packages("Amelia")
-install.packages("psych")
-install.packages("qwraps2")
-install.packages("corrplot")
-install.packages("dplyr")
-install.packages("ggplot2")
-install.packages("dunn.test")
-
-
+```{r 1, message=FALSE, warning=FALSE, include=FALSE}
 library(finalfit)
 library(mice)
 library(naniar)
@@ -52,9 +39,9 @@ library(dunn.test)
 
 ## Wczytanie danych
 
-Nasętpnym krokiem jest wczytanie danych, które po wyczyszczeniu będą bazą do przeprowadzenia analizy.
+Nasętpnym krokiem jest wczytanie danych, które po wyczyszczeniu będą bazą do przeprowadzenia analizy. Dane zostały wczytane z pliku samochody_new.csv.
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 2, message=FALSE, warning=FALSE, include=FALSE}
 samochody_new <- read.csv("samochody_new.csv", stringsAsFactors = FALSE)
 if (file.exists("samochody_new.csv")) {
   samochody_final <- read.csv("samochody_new.csv")
@@ -69,7 +56,7 @@ if (file.exists("samochody_new.csv")) {
 
 Sprawdzenie czy w kolumnach występują braki danych
 
-```{r missing-values-count, echo=TRUE, message=FALSE, warning=FALSE}
+```{r missing-values-count, echo=FALSE, message=FALSE, warning=FALSE}
 # Liczba braków danych
 print("Liczba braków danych w każdej kolumnie:")
 colSums(is.na(samochody_new))
@@ -77,9 +64,9 @@ colSums(is.na(samochody_new))
 
 ### Procent braków danych w każdej kolumnie
 
-Obliczenie procentowego udziału braków danych w każdej kolumnie analizowanego pliku.
+Kolejnym krokiem w wykryciu braków danych jest obliczenie procentowego udziału braków danych w każdej kolumnie analizowanego pliku.
 
-```{r missing-values-percent, echo=TRUE, message=FALSE, warning=FALSE}
+```{r missing-values-percent, echo=FALSE, message=FALSE, warning=FALSE}
 # Procent braków danych
 print("Procent braków danych w każdej kolumnie:")
 colMeans(is.na(samochody_new)) * 100
@@ -87,16 +74,31 @@ colMeans(is.na(samochody_new)) * 100
 
 ## Wzorce braków danych
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+Ważne jest także określenie, identyfikacja oraz klasyfikacja brakujących wartości.
+
+```{r 5, echo=FALSE, message=FALSE, warning=FALSE}
 print("Macierz wzorców braków danych:")
 md.pattern(samochody_new) 
+```
 
+```{r 6, echo=FALSE, message=FALSE, warning=FALSE}
 gg_miss_fct(x = samochody_new, fct = year)
+```
 
+```{r 7, echo=FALSE, message=FALSE, warning=FALSE}
 gg_miss_upset(samochody_new)
+```
 
+```{r 8, echo=FALSE, message=FALSE, warning=FALSE}
 missmap(samochody_new)
-md.pattern(samochody_new)
+```
+
+```{r 9, echo=FALSE, message=FALSE, warning=FALSE}
+md.pattern(samochody_new, plot = FALSE)
+```
+
+```{r 10, echo=FALSE, message=FALSE, warning=FALSE}
+aggr(samochody_new, col = c("darkred", "pink"), numbers = TRUE, sortVars = TRUE, labels = names(samochody_new), cex.axis = 0.7, gap = 3, ylab = c("Braki danych", "Częstotliwość"))
 
 ```
 
@@ -104,16 +106,9 @@ md.pattern(samochody_new)
 
 ## Wczytanie oraz instalacja bibliotek
 
-Instalowanie bibliotek potrzebnych do dalszej analizy.
+Instalowanie bibliotek potrzebnych do dalszej analizy między innymi editrules, deducorrect oraz ISLR.
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
-
-install.packages("editrules")
-install.packages("deducorrect")
-install.packages("ISLR")
-install.packages("dplyr")
-
-
+```{r 11, message=FALSE, warning=FALSE, include=FALSE}
 library(editrules)
 library(deducorrect)
 library(ISLR)
@@ -124,7 +119,7 @@ library(ISLR)
 
 Identyfikacja, lokalizacja oraz cena skali braków w danych.
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 12, echo=FALSE, message=FALSE, warning=FALSE}
 
 sum(complete.cases(samochody_new))
 nrow(samochody_new[complete.cases(samochody_new), ]) / nrow(samochody_new)*100
@@ -147,7 +142,7 @@ summary(samochody_new)
 
 Identyfikacja problemów z niespójnością danych oraz metody naprawy tak aby analiza była rzetelna i wiarygodna.
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 13, echo=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
 
 samochody_new_rules <- samochody_new %>%
@@ -166,7 +161,7 @@ View(samochody_new_rules)
 
 W posidadanych danych znajdują się miasta spoza granic Polski. W naszej analizie chcemy się skupić na danych z polskich województw, więc pozostałe dane zostaną usunięte.
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 14, echo=FALSE, message=FALSE, warning=FALSE}
 polskie_wojewodztwa <- c(
   "Dolnośląskie", "Kujawsko-Pomorskie", "Lubelskie", 
   "Lubuskie", "Łódzkie", "Małopolskie", "Mazowieckie", 
@@ -182,7 +177,7 @@ print(head(samochody_new_rules))
 
 ```
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 15, echo=FALSE, message=FALSE, warning=FALSE}
 zlamania <- samochody_new %>%
   summarise(
     Regula1 = sum(nchar(brand) <= 2),   
@@ -195,7 +190,7 @@ zlamania <- samochody_new %>%
 print(zlamania)
 ```
 
-```{r echo=TRUE}
+```{r 16, echo=FALSE, message=FALSE, warning=FALSE}
 zlamania_procentowo <- samochody_new %>%
   summarise(
     Regula1 = sum(nchar(brand) <= 2) / n()*100,   
@@ -214,7 +209,7 @@ print(zlamania_procentowo)
 
 Wartości odstające zaburzają rzetelność analizy, więc powinny zostać usunięte.
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 17, echo=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
 samochody_final <- samochody_new_rules %>%
   rowwise() %>%
@@ -231,7 +226,7 @@ samochody_final <- samochody_new_rules %>%
 
 Sprawdzanie jak wygląda finalny plik z wyczyczonymi danymi i zapisanie ich do osobnego pliku, który będzie użyty w analizie.
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 18, echo=FALSE, message=FALSE, warning=FALSE}
 print(samochody_final)
 write.csv(samochody_final, "samochody_final.csv", row.names = FALSE)
 if (file.exists("samochody_final.csv")) {
@@ -246,8 +241,12 @@ if (file.exists("samochody_final.csv")) {
 
 ## 1. Cena samochodu zależna od marki
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
-data_top16 <- samochody_final[order(-samochody_final$price_in_pln), ][1:3, ]
+```{r 19, echo=FALSE, message=FALSE, warning=FALSE}
+data_top16 <- samochody_final %>%
+  arrange(desc(price_in_pln)) %>%
+  distinct(brand, .keep_all = TRUE) %>%  
+  head(3) 
+
 ggplot(data_top16, aes(x = reorder(brand, price_in_pln), y = price_in_pln)) +
   geom_col(fill = "pink") +  
   labs(
@@ -255,19 +254,18 @@ ggplot(data_top16, aes(x = reorder(brand, price_in_pln), y = price_in_pln)) +
     x = "Marka",
     y = "Cena samochodu (PLN)"
   ) +
-  theme_minimal() +
+  theme_set(theme_minimal()) +
   theme(
-    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-    axis.title = element_text(size = 12),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.title = element_text(size = 12),
-    legend.text = element_text(size = 10)
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), 
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"), 
+    axis.text.x = element_text(angle = 45, hjust = 1), 
   )
 ```
 
 Wykres zawiera informacje na temat marek samochodów, które posiadają najwyższe ceny. Wśród producentów zauważamy znaczną przewagę wysokości cen Lamborghini nad pozostałymi markami aut. Cena modelu Aventador S wynosi 2 550 000 zł. Kolejną najdroższą marką jest Ferrari, następnie Mercedes-Benz.
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 20, echo=FALSE, message=FALSE, warning=FALSE}
 data_top3 <- samochody_final[order(samochody_final$price_in_pln), ][1:3, ]
 
 ggplot(data_top3, aes(x = reorder(brand, price_in_pln), y = price_in_pln)) +
@@ -277,7 +275,7 @@ ggplot(data_top3, aes(x = reorder(brand, price_in_pln), y = price_in_pln)) +
     x = "Marka",
     y = "Cena samochodu (PLN)"
   ) +
-  theme_minimal() +
+  theme_set(theme_minimal()) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
     axis.title = element_text(size = 12),
@@ -292,9 +290,8 @@ Wykres zawiera informacje na temat marek samochodów, które posiadają najniżs
 
 ## 2. Cena samochodu zależna od daty wyprodukowania
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 21, echo=FALSE, message=FALSE, warning=FALSE}
 
-install.packages("ggplot2")
 library(ggplot2)
 library(dplyr)
 
@@ -314,14 +311,14 @@ ggplot(data_top_years, aes(x = factor(year), y = price_in_pln)) +
     x = "Rok wyprodukowania",
     y = "Cena samochodu (w PLN)"
   ) +
-  theme_minimal()
+  theme_set(theme_minimal())
 ```
 
 Wykres zawiera dane, które ukazują, w którym roku zostały wyprodukowane najdroższe dostępne auta. Dostrzegamy, iż najwięcej najdroższych aut zostało wyprodukowanych w latach 2017-2019. W roku 2018 dostrzegamy największe wartości odstające- są to najdroższe z dostępnych aut- Lamborghini Aventador S, których cena wynosi 2 550 000 złotych.
 
 ## 3. Cena samochodu zależna od przebiegu
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 22, echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
 ggplot(samochody_final, aes(x= mileage, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
   labs(
@@ -329,14 +326,14 @@ ggplot(samochody_final, aes(x= mileage, y= price_in_pln)) + geom_boxplot(fill = 
     x = "przebieg",
     y = "Cena samochodu (w PLN)"
   ) +
- theme_minimal()
+ theme_set(theme_minimal())
 ```
 
 Większość punktów znajduje się w dolnej części wykresu, co sugeruje, że cena samochodów zazwyczaj mieści się w niższym przedziale, niezależnie od przebiegu. Nie widać wyraźnej korelacji – samochody o różnym przebiegu mogą mieć bardzo różne ceny. Występują pojedyncze punkty znacznie powyżej większości obserwacji – mogą to być luksusowe lub kolekcjonerskie pojazdy, których cena jest bardzo wysoka, niezależnie od przebiegu.
 
 ## 4. Cena samochodu zależna od pojemności silnika
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 23, echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
 ggplot(samochody_final, aes(x= engine_capacity, y= price_in_pln)) + geom_boxplot(fill = "pink", color = "red") + 
   labs(
@@ -344,14 +341,14 @@ ggplot(samochody_final, aes(x= engine_capacity, y= price_in_pln)) + geom_boxplot
     x = "pojemność silnika",
     y = "Cena samochodu (w PLN)"
   ) +
- theme_minimal()
+ theme_set(theme_minimal())
 ```
 
 Większość samochodów ma stosunkowo niską cenę, niezależnie od pojemności silnika. Widać duże zagęszczenie punktów w dolnej części wykresu. Brak wyraźnej liniowej zależności między pojemnością silnika a ceną – cena samochodu nie rośnie wprost proporcjonalnie do pojemności silnika. Istnieją pojedyncze punkty w górnej części wykresu, które reprezentują samochody o bardzo wysokiej wartości (np. luksusowe, sportowe lub kolekcjonerskie auta). Widać, że droższe samochody częściej mają większą pojemność silnika, ale nie jest to regułą. Istnieją też samochody o dużej pojemności, które nie są szczególnie drogie, co może wskazywać na starsze modele lub mniej prestiżowe marki.
 
 ## 5. Średnia cena samochodu w województwie
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 24, echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
 
 ggplot(samochody_final, aes(x = voivodeship, y = price_in_pln, group = voivodeship)) +
@@ -362,7 +359,7 @@ ggplot(samochody_final, aes(x = voivodeship, y = price_in_pln, group = voivodesh
     x = "Województwo",
     y = "Cena samochodu (PLN)"
   ) +
-  theme_minimal() +
+  theme_set(theme_minimal()) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
     axis.title = element_text(size = 12),
@@ -374,7 +371,7 @@ Wykres pokazuje rozpiętość cen samochodów w różnych województwach w Polsc
 
 ## 6. 15 miast z najwyższymi cenami samochodów
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r 25, echo=FALSE, message=FALSE, warning=FALSE}
 data_top15 <- samochody_final[order(-samochody_final$price_in_pln), ][1:15, ]
 ggplot(data_top15, aes(x = reorder(city, price_in_pln), y = price_in_pln)) +
   geom_col(fill = "pink") +  
@@ -383,7 +380,7 @@ ggplot(data_top15, aes(x = reorder(city, price_in_pln), y = price_in_pln)) +
     x = "Miasto",
     y = "Cena samochodu (PLN)"
   ) +
-  theme_minimal() +
+  theme_set(theme_minimal()) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
     axis.title = element_text(size = 12),
@@ -397,7 +394,7 @@ Wśród miast przedstawionych na wykresie, Warszawa wyróżnia się jako miasto 
 
 ## 7. Rodzaje paliwa w polskich województwach
 
-```{r}
+```{r 26, echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
 library(dplyr)
 fuel_data <- samochody_final %>%
@@ -418,7 +415,7 @@ ggplot(fuel_data, aes(x = voivodeship, y = n, fill = fuel_type)) +
     y = "Liczba pojazdów",
     fill = "Rodzaj paliwa"
   ) +
-  theme_minimal() +
+  theme_set(theme_minimal()) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -435,9 +432,7 @@ Z wykresu można wyczytać, że benzyna i diesel są najpopularniejszymi rodzaja
 
 Stworzenie kolorowej tabeli ze statystykami opisowymi.
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
-install.packages("gtsummary")
-install.packages("gt")
+```{r 27, echo=FALSE, message=FALSE, warning=FALSE}
 library(gtsummary)
 library(gt)
 samochody_final %>%
@@ -471,7 +466,7 @@ samochody_final %>%
   )
 ```
 
-```{r}
+```{r 28, echo=FALSE, message=FALSE, warning=FALSE}
 library(gtsummary)
 samochody_new_rules %>%
   select(price_in_pln,year) %>%
@@ -485,7 +480,7 @@ samochody_new_rules %>%
     missing = "no",
     label = price_in_pln ~ "Cena") %>%
   modify_header(label ~ "**Zmienna**") %>%
-  modify_caption("**Tabela 1. Rozkłąd cen według marki. **") %>%
+  modify_caption("**Tabela 1. Rozkład cen według roku produkcji. **") %>%
   bold_labels() %>% 
   add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2)) %>%
 as_gt() %>%
@@ -503,59 +498,108 @@ tab_style(
     locations = cells_column_labels()
   )
 ```
-## 1. Hipoteza 1 -> marka nie ma wpływu na cenę. 
-H0:  Średnie (lub mediany) cen samochodów są takie same dla wszystkich marek. Marka nie ma wpływu na cenę auta.
-H1: Przynajmniej jedna marka ma inną medianę ceny niż pozostałe. Marka wpływa na cenę auta.
-α = 0,05
-```{r}
-install.packages("nortest")
+
+## 1. Hipoteza 1 -\> marka nie ma wpływu na cenę.
+
+H0: Średnie (lub mediany) cen samochodów są takie same dla wszystkich marek. Marka nie ma wpływu na cenę auta. H1: Przynajmniej jedna marka ma inną medianę ceny niż pozostałe. Marka wpływa na cenę auta. α = 0,05
+
+```{r 30, echo=FALSE, message=FALSE, warning=FALSE}
+
 library(nortest)
 ad_test <- ad.test(samochody_new_rules$price_in_pln)
 print(ad_test)
 
 ```
-```{r}
+
+```{r 31, echo=FALSE, message=FALSE, warning=FALSE}
 library(dunn.test)
 dunn_test <- dunn.test(samochody_new_rules$price_in_pln, samochody_new_rules$brand, method = "bonferroni")
 print(dunn_test)
+
+```
+
+```{r 32, echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
+
 ggplot(samochody_new_rules, aes(x = reorder(brand, price_in_pln, median), y = price_in_pln)) +
-  geom_boxplot() +
+  geom_boxplot(fill = "pink", color = "darkred", alpha = 0.7) +  
   coord_flip() +
   ggtitle("Rozkład cen samochodów dla różnych marek") +
-  xlab("Marka") + ylab("Cena w PLN")
+  xlab(🚗 "Marka") + 
+  ylab("💰 Cena w PLN") +
+  theme_set(theme_minimal()) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "darkred"),
+    axis.title.x = element_text(size = 14, face = "bold", color = "pink"), 
+    axis.title.y = element_text(size = 14, face = "bold", color = "pink"), 
+    axis.text = element_text(size = 12, color = "darkred") # 
+  )
 ```
-## 2. Hipoteza 2 -> Rok wyprodukwoania auta nie ma wpływu na cenę. 
-H0:  Średnie (lub mediany) cen samochodów są takie same dla wszystkich lat wyprodukowania. Rok wyprodukowania nie ma wpływu na cenę auta.
-H1: Przynajmniej jeden rok wyprodukowania ma inną medianę ceny niż pozostałe. Rok wyprodukowania wpływa na cenę auta.
-α = 0,05
 
-```{r}
+## 2. Hipoteza 2 -\> Rok wyprodukwoania auta nie ma wpływu na cenę.
+
+H0: Średnie (lub mediany) cen samochodów są takie same dla wszystkich lat wyprodukowania. Rok wyprodukowania nie ma wpływu na cenę auta. H1: Przynajmniej jeden rok wyprodukowania ma inną medianę ceny niż pozostałe. Rok wyprodukowania wpływa na cenę auta. α = 0,05
+
+```{r 33, echo=FALSE, message=FALSE, warning=FALSE}
 library(dunn.test)
 dunn_test <- dunn.test(samochody_new_rules$price_in_pln, samochody_new_rules$year, method = "bonferroni")
 print(dunn_test)
+
+```
+
+```{r 34, echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
 ggplot(samochody_new_rules, aes(x = reorder(year, price_in_pln, median), y = price_in_pln)) +
   geom_boxplot() +
   coord_flip() +
   ggtitle("Rozkład cen samochodów dla różnych lat ich wyprodukowania") +
   xlab("Rok wyprodukowania") + ylab("Cena w PLN")
-```
-## 3. Hipoteza 3 -> Przebieg auta nie ma wpływu na cenę. 
-H0:  Średnie (lub mediany) cen samochodów są takie same dla wszystkich ilości przebiegu danego auta. Przebieg nie ma wpływu na cenę auta.
-H1: Przynajmniej jeden przebieg ma inną medianę ceny niż pozostałe. Przebieg wpływa na cenę auta.
-α = 0,05
 
-```{r}
+ggplot(samochody_new_rules, aes(x = reorder(year, price_in_pln, median), y = price_in_pln)) +
+  geom_boxplot(fill = "pink", color = "darkred", alpha = 0.7) +  
+  coord_flip() +
+  ggtitle("Rozkład cen samochodów według lat produkcji") +
+  xlab("Rok wyprodukowania") + 
+  ylab("Cena w PLN") +
+  theme_set(theme_minimal()) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "darkred"), 
+    axis.title.x = element_text(size = 14, face = "bold", color = "pink"), 
+    axis.title.y = element_text(size = 14, face = "bold", color = "pink"), 
+    axis.text = element_text(size = 12, color = "darkred") 
+  )
+```
+
+## 3. Hipoteza 3 -\> Przebieg auta nie ma wpływu na cenę.
+
+H0: Średnie (lub mediany) cen samochodów są takie same dla wszystkich ilości przebiegu danego auta. Przebieg nie ma wpływu na cenę auta. H1: Przynajmniej jeden przebieg ma inną medianę ceny niż pozostałe. Przebieg wpływa na cenę auta. α = 0,05
+
+```{r 35, echo=FALSE, message=FALSE, warning=FALSE}
 library(dunn.test)
 dunn_test <- dunn.test(samochody_new_rules$price_in_pln, samochody_new_rules$mileage, method = "bonferroni")
 print(dunn_test)
-library(ggplot2)
-ggplot(samochody_new_rules, aes(x = reorder(mileage, price_in_pln, median), y = price_in_pln)) +
-  geom_boxplot() +
-  coord_flip() +
-  ggtitle("Rozkład cen samochodów dla różnych przebiegów") +
-  xlab("Przebieg") + ylab("Cena w PLN")
+
 ```
+
+```{r 36, echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+ggplot(samochody_new_rules, aes(x = reorder(mileage, price_in_pln, median), y = price_in_pln)) +
+  geom_boxplot(fill = "lightpink", color = "darkred", alpha = 0.7) +  
+  coord_flip() +
+  ggtitle("Rozkład cen samochodów według przebiegu") +
+  xlab("Przebieg (km)") + 
+  ylab("Cena w PLN") +
+  theme_set(theme_minimal()) +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "darkred"), 
+    axis.title.x = element_text(size = 14, face = "bold", color = "pink"), 
+    axis.title.y = element_text(size = 14, face = "bold", color = "pink"), 
+    axis.text = element_text(size = 12, color = "darkred") 
+  )
+
+```
+
 # Podsumowanie wniosków.
-Najistotniejszy wpływ na cenę samochodu ma nazwa producenta- marka. Zgodnie z wykresem ukazanym w punkcie Statystyki opisowe- hipoteza 1, dostrzegamy, iż ceny aut marek takich jak Lamborghini, Ferrari czy Aston Martin sięgają powyżej 2 milionów złotych. Rozkłąd cen tych producentów jest szeroki, co sugeruje dużą zmienność w oferowanych modelach. Samochody klasy premium, takie jak Porshe, Land Rover, Mercedes- Benz, BMW i Maserati również charakteryzują się wysokimi cenami swoich samochodów, ale sięgają one średnio w granicy około 1 do 2 milionów złotych. Kolejno dostrzegamy marki popularne, do których należy Toyota, Volkswagen, Hyundai, Mazda czy Kia. Mają one ceny skoncentrowane w niższych przedziałach cenowych, średnio poniżej 1 miliona złotych, do około 300 tysięcy złotych. Poniżej ceny 300 tysięcy złotych zauważamy takie marki jak Daewoo, Citroen, Smart, które należą do grupy najtańszych aut z całego zbioru. Na wykresach hipotez 2 i 3 nie dostrzegamy aż tak wyraźnych różnic między przedziałami, jak w wykresie hipotezy 1. Na rozkład cen aut w zależności od przebiegu czy roku wyprodukowania nie jest tak jednoznaczny, jak wykres rozkładu cen ze względu na markę auta. Rozkład cen dla każdej marki ukazuje występowanie pojedyńczych bardzo drogich modeli aut, których jest niewiele, w porównaniu do aut niskobudżetowych. Zgodnie z wynikami wykresów hipotez, cena auta jest zależna od roku wyprodukowania i przebiegu, natomiast najistotniejszy wpływ na cenę auta ma jego nazwa producenta, czyli marka. 
+
+Najistotniejszy wpływ na cenę samochodu ma nazwa producenta- marka. Zgodnie z wykresem ukazanym w punkcie Statystyki opisowe- hipoteza 1, dostrzegamy, iż ceny aut marek takich jak Lamborghini, Ferrari czy Aston Martin sięgają powyżej 2 milionów złotych. Rozkłąd cen tych producentów jest szeroki, co sugeruje dużą zmienność w oferowanych modelach. Samochody klasy premium, takie jak Porshe, Land Rover, Mercedes- Benz, BMW i Maserati również charakteryzują się wysokimi cenami swoich samochodów, ale sięgają one średnio w granicy około 1 do 2 milionów złotych. Kolejno dostrzegamy marki popularne, do których należy Toyota, Volkswagen, Hyundai, Mazda czy Kia. Mają one ceny skoncentrowane w niższych przedziałach cenowych, średnio poniżej 1 miliona złotych, do około 300 tysięcy złotych. Poniżej ceny 300 tysięcy złotych zauważamy takie marki jak Daewoo, Citroen, Smart, które należą do grupy najtańszych aut z całego zbioru. Na wykresach hipotez 2 i 3 nie dostrzegamy aż tak wyraźnych różnic między przedziałami, jak w wykresie hipotezy 1. Na rozkład cen aut w zależności od przebiegu czy roku wyprodukowania nie jest tak jednoznaczny, jak wykres rozkładu cen ze względu na markę auta. Rozkład cen dla każdej marki ukazuje występowanie pojedyńczych bardzo drogich modeli aut, których jest niewiele, w porównaniu do aut niskobudżetowych. Zgodnie z wynikami wykresów hipotez, cena auta jest zależna od roku wyprodukowania i przebiegu, natomiast najistotniejszy wpływ na cenę auta ma jego nazwa producenta, czyli marka.
