@@ -157,7 +157,7 @@ print(samochody_new_rules)
 View(samochody_new_rules)
 ```
 
-## Czyszczenie reginów niebędących polskimi województwami
+## Czyszczenie regionów niebędących polskimi województwami
 
 W posidadanych danych znajdują się miasta spoza granic Polski. W naszej analizie chcemy się skupić na danych z polskich województw, więc pozostałe dane zostaną usunięte.
 
@@ -446,8 +446,8 @@ samochody_final %>%
       "{min}, {max}"),
     missing = "no",
     label = price_in_pln ~ "Cena") %>%
-  modify_header(label ~ "**Zmienna**") %>%
-  modify_caption("**Tabela 1. Zmiana cen według marki**") %>%
+  modify_header(label ~ "Zmienna") %>%
+  modify_caption("Tabela 1. Zmiana cen według marki") %>%
   bold_labels() %>% 
   add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2))%>%
   as_gt() %>%
@@ -479,8 +479,8 @@ samochody_new_rules %>%
       "{min}, {max}"),
     missing = "no",
     label = price_in_pln ~ "Cena") %>%
-  modify_header(label ~ "**Zmienna**") %>%
-  modify_caption("**Tabela 1. Rozkład cen według roku produkcji. **") %>%
+  modify_header(label ~ "Zmienna") %>%
+  modify_caption("Tabela 1. Rozkład cen według roku produkcji") %>%
   bold_labels() %>% 
   add_p(pvalue_fun = ~ style_pvalue(.x, digits = 2)) %>%
 as_gt() %>%
@@ -525,8 +525,8 @@ ggplot(samochody_new_rules, aes(x = reorder(brand, price_in_pln, median), y = pr
   geom_boxplot(fill = "pink", color = "darkred", alpha = 0.7) +  
   coord_flip() +
   ggtitle("Rozkład cen samochodów dla różnych marek") +
-  xlab(🚗 "Marka") + 
-  ylab("💰 Cena w PLN") +
+  xlab("Marka") + 
+  ylab("Cena w PLN") +
   theme_set(theme_minimal()) +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "darkred"),
@@ -550,12 +550,6 @@ print(dunn_test)
 ```{r 34, echo=FALSE, message=FALSE, warning=FALSE}
 library(ggplot2)
 ggplot(samochody_new_rules, aes(x = reorder(year, price_in_pln, median), y = price_in_pln)) +
-  geom_boxplot() +
-  coord_flip() +
-  ggtitle("Rozkład cen samochodów dla różnych lat ich wyprodukowania") +
-  xlab("Rok wyprodukowania") + ylab("Cena w PLN")
-
-ggplot(samochody_new_rules, aes(x = reorder(year, price_in_pln, median), y = price_in_pln)) +
   geom_boxplot(fill = "pink", color = "darkred", alpha = 0.7) +  
   coord_flip() +
   ggtitle("Rozkład cen samochodów według lat produkcji") +
@@ -568,36 +562,6 @@ ggplot(samochody_new_rules, aes(x = reorder(year, price_in_pln, median), y = pri
     axis.title.y = element_text(size = 14, face = "bold", color = "pink"), 
     axis.text = element_text(size = 12, color = "darkred") 
   )
-```
-
-## 3. Hipoteza 3 -\> Przebieg auta nie ma wpływu na cenę.
-
-H0: Średnie (lub mediany) cen samochodów są takie same dla wszystkich ilości przebiegu danego auta. Przebieg nie ma wpływu na cenę auta. H1: Przynajmniej jeden przebieg ma inną medianę ceny niż pozostałe. Przebieg wpływa na cenę auta. α = 0,05
-
-```{r 35, echo=FALSE, message=FALSE, warning=FALSE}
-library(dunn.test)
-dunn_test <- dunn.test(samochody_new_rules$price_in_pln, samochody_new_rules$mileage, method = "bonferroni")
-print(dunn_test)
-
-```
-
-```{r 36, echo=FALSE, message=FALSE, warning=FALSE}
-library(ggplot2)
-
-ggplot(samochody_new_rules, aes(x = reorder(mileage, price_in_pln, median), y = price_in_pln)) +
-  geom_boxplot(fill = "lightpink", color = "darkred", alpha = 0.7) +  
-  coord_flip() +
-  ggtitle("Rozkład cen samochodów według przebiegu") +
-  xlab("Przebieg (km)") + 
-  ylab("Cena w PLN") +
-  theme_set(theme_minimal()) +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "darkred"), 
-    axis.title.x = element_text(size = 14, face = "bold", color = "pink"), 
-    axis.title.y = element_text(size = 14, face = "bold", color = "pink"), 
-    axis.text = element_text(size = 12, color = "darkred") 
-  )
-
 ```
 
 # Podsumowanie wniosków.
