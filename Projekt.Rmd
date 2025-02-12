@@ -171,8 +171,7 @@ samochody_new_rules <- samochody_new %>%
   filter(year >= 1995) %>%
   filter(year<= 2024)
 
-print(samochody_new_rules)
-View(samochody_new_rules)
+print(head(samochody_new_rules, 10))
 ```
 
 ## Czyszczenie reginów niebędących polskimi województwami
