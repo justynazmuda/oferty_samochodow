@@ -93,10 +93,14 @@ md.pattern(samochody_new)
 
 ```
 
+Macierz braków danych pokazuje, że większość zmiennych zawiera kompletne informacje, a braki koncentrują się tylko w wybranych kolumnach jak "price_in"pln", "city" oraz "year". W zbiorze danych występują trzy wzorce braków danych. 
+
 ```{r echo=TRUE}
 gg_miss_fct(x = samochody_new, fct = year)
 
 ```
+
+Wykres przedstawia rozkład brakujących danych w zbiorze samochody_new w w zaeżności od roku. Najwięcej brakujących wartości występuje w zmiennych price_in_pln, brand i city, co było również widoczne w macierzy braków danych. Występowanie braków nie jest losowe – w niektórych latach widoczne są większe luki, co może sugerować problemy z dostępnością danych historycznych lub zmianę sposobu ich zbierania. 
 
 ```{r echo=TRUE}
 gg_miss_upset(samochody_new)
