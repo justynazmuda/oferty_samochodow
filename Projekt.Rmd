@@ -135,6 +135,8 @@ for (n in colnames(samochody_new)){
   is.na(samochody_new[[n]]) <- is.special(samochody_new[[n]])
 }
 summary(samochody_new)
+print(head(samochody_new, 10))
+
 
 ```
 
@@ -155,6 +157,8 @@ samochody_new_rules <- samochody_new %>%
 
 print(samochody_new_rules)
 View(samochody_new_rules)
+print(head(samochody_new_rules, 10))
+
 ```
 
 ## Czyszczenie regionów niebędących polskimi województwami
@@ -173,7 +177,7 @@ if (!"voivodeship" %in% colnames(samochody_new_rules)) {
   stop("Kolumna 'voivodeship' nie istnieje w danych.")
 }
 samochody_new_rules <- samochody_new_rules[samochody_new_rules$voivodeship %in% polskie_wojewodztwa, ]
-print(head(samochody_new_rules))
+
 
 ```
 
