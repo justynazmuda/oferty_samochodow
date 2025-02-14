@@ -17,7 +17,7 @@ header-includes:
 
 Celem niniejszego raportu jest zbadanie polskiego rynku samochodów na podstawie danych pochodzących z portalu Otomoto.pl. Zbadano jak na cenę auta wpływa nazwa producenta, rok wyprodukowania samochodu oraz przebieg, a także województwo, w którym zostało wystawione na sprzedaż. Raport wykonano na podstawie analizy cen aut oraz ich wybranych cech. Analiza obejmuje liczbę braków danych, procent braków w poszczególnych kolumnach, a także wzorce braków oraz wizualizacje przedstawiające od czego zależy cena wybranych aut.
 
-# Instalacja i Wczytanie niezbędnych bibliotek oraz danych
+# Instalacja i wczytanie niezbędnych bibliotek oraz danych
 
 ## Wczytanie oraz instalacja bibliotek
 
@@ -41,13 +41,15 @@ library(dunn.test)
 
 Nasętpnym krokiem jest wczytanie danych, które po wyczyszczeniu będą bazą do przeprowadzenia analizy. Dane zostały wczytane z pliku samochody_new.csv.
 
-```{r 2, message=FALSE, warning=FALSE, include=FALSE}
+```{r 2, echo=FALSE, message=FALSE, warning=FALSE}
 samochody_new <- read.csv("samochody_new.csv", stringsAsFactors = FALSE)
 if (file.exists("samochody_new.csv")) {
   samochody_final <- read.csv("samochody_new.csv")
 } else {
   stop("Plik 'samochody_new.csv' nie został znaleziony.")
 }
+
+head(samochody_new)
 ```
 
 ## Sprawdzenie czy w danych są braki
@@ -76,26 +78,39 @@ colMeans(is.na(samochody_new)) * 100
 
 Ważne jest także określenie, identyfikacja oraz klasyfikacja brakujących wartości.
 
+### 1. Macierz wzorców braków danych
+
 ```{r 5, echo=FALSE, message=FALSE, warning=FALSE}
 print("Macierz wzorców braków danych:")
+par(cex = 0.5) 
 md.pattern(samochody_new) 
 ```
+
+Macierz braków danych pokazuje, że większość zmiennych zawiera kompletne informacje, a braki koncentrują się tylko w wybranych kolumnach jak "price_in"pln", "brand" oraz "year". W zbiorze danych występują trzy wzorce braków danych.
+
+### 2. Wykres braków danych w zalezności od roku
 
 ```{r 6, echo=FALSE, message=FALSE, warning=FALSE}
 gg_miss_fct(x = samochody_new, fct = year)
 ```
 
+Wykres przedstawia rozkład brakujących danych w zbiorze samochody_new w w zależności od roku. Najwięcej brakujących wartości występuje w zmiennych price_in_pln oraz brand, co było również widoczne w macierzy braków danych. Występowanie braków nie jest losowe – w niektórych latach widoczne są większe luki, co może sugerować problemy z dostępnością danych historycznych lub zmianę sposobu ich zbierania.
+
+### 3. Wykres braków danych
+
 ```{r 7, echo=FALSE, message=FALSE, warning=FALSE}
 gg_miss_upset(samochody_new)
 ```
+
+Wykres pokazuje, że największa liczba braków danych występuje w zmiennych year price_in_pln i brand, co było również widoczne na wcześniejszej macierzy braków. Najczęstszy wzorzec braków obejmuje brak danych w zmiennej year - 2385 rekordów, a inne kombinacje braków występują rzadziej. Stosunkowo niewielka liczba obserwacji ma braki w więcej niż dwóch zmiennych jednocześnie, co sugeruje, że dane są częściowo uzupełnione, ale pewne zmienne wymagają imputacji lub dalszej analizy.
+
+### 4. Missigness map dla danych w zbiorze
 
 ```{r 8, echo=FALSE, message=FALSE, warning=FALSE}
 missmap(samochody_new)
 ```
 
-```{r 9, echo=FALSE, message=FALSE, warning=FALSE}
-md.pattern(samochody_new, plot = FALSE)
-```
+Wykres Missingness Map pokazuje rozmieszczenie brakujących danych w zbiorze, gdzie niebieski kolor oznacza obserwowane wartości, a jasne linie wskazują braki. Zgodnie z wcześniejszymi wykresami, największa liczba braków występuje w zmiennych price_in_pln oraz year, ale ich udział w całym zbiorze jest niewielki (około 1%).
 
 ```{r 10, echo=FALSE, message=FALSE, warning=FALSE}
 aggr(samochody_new, col = c("darkred", "pink"), numbers = TRUE, sortVars = TRUE, labels = names(samochody_new), cex.axis = 0.7, gap = 3, ylab = c("Braki danych", "Częstotliwość"))
@@ -155,8 +170,6 @@ samochody_new_rules <- samochody_new %>%
   filter(year >= 1995) %>%
   filter(year<= 2024)
 
-print(samochody_new_rules)
-View(samochody_new_rules)
 print(head(samochody_new_rules, 10))
 
 ```
@@ -181,6 +194,8 @@ samochody_new_rules <- samochody_new_rules[samochody_new_rules$voivodeship %in% 
 
 ```
 
+## Sprawdzenie poprawności danych w pliku samochody_new
+
 ```{r 15, echo=FALSE, message=FALSE, warning=FALSE}
 zlamania <- samochody_new %>%
   summarise(
@@ -193,6 +208,8 @@ zlamania <- samochody_new %>%
   )
 print(zlamania)
 ```
+
+Niespójności znaleziono w rodzaju paliwa, jest to aż 9594 wartości oraz w przebiegu – 5418 wartości.
 
 ```{r 16, echo=FALSE, message=FALSE, warning=FALSE}
 zlamania_procentowo <- samochody_new %>%
@@ -238,7 +255,6 @@ if (file.exists("samochody_final.csv")) {
 } else {
   stop("Plik 'samochody_final.csv' nie został znaleziony.")
 }
-
 ```
 
 # Wizualizacja danych
@@ -434,7 +450,7 @@ Z wykresu można wyczytać, że benzyna i diesel są najpopularniejszymi rodzaja
 
 # Statystyki opisowe
 
-Stworzenie kolorowej tabeli ze statystykami opisowymi.
+## Zmiana ceny samochodu według marki
 
 ```{r 27, echo=FALSE, message=FALSE, warning=FALSE}
 library(gtsummary)
@@ -446,8 +462,8 @@ samochody_final %>%
     type = all_continuous() ~ "continuous2",
     statistic = all_continuous() ~ c(
       "{N_nonmiss}","{mean}","{sd}",
-      "{median} ({p25}, {p75})",
-      "{min}, {max}"),
+      "{median}", "{p25}", "{p75}",
+      "{min}", "{max}"),
     missing = "no",
     label = price_in_pln ~ "Cena") %>%
   modify_header(label ~ "Zmienna") %>%
@@ -470,6 +486,10 @@ samochody_final %>%
   )
 ```
 
+W obecnym zestawieniu Volkswagen posiada największa ilość samochodów, średnia cena samochodu tej marki wynosi 63 399 PLN, a zakres cen od 1 600 PLN do 470 000 PLN. Lamborghini jest z najwyższymi cenami. Średnia cena wynosi 1 271 214 PLN, a zakres cen wynosi od 289 000 PLN do 2 550 000 PLN.
+
+## Rozkład cen według roku produkcji samochodu.
+
 ```{r 28, echo=FALSE, message=FALSE, warning=FALSE}
 library(gtsummary)
 samochody_new_rules %>%
@@ -478,9 +498,9 @@ samochody_new_rules %>%
     by=year,
     type = all_continuous() ~ "continuous2",
     statistic = all_continuous() ~ c(
-      "{N_nonmiss}","{mean}","{sd}",
-      "{median} ({p25}, {p75})",
-      "{min}, {max}"),
+     "{N_nonmiss}","{mean}","{sd}",
+      "{median}", "{p25}", "{p75}",
+      "{min}", "{max}"),
     missing = "no",
     label = price_in_pln ~ "Cena") %>%
   modify_header(label ~ "Zmienna") %>%
@@ -503,6 +523,8 @@ tab_style(
   )
 ```
 
+Samochody wyprodukowane w 2000 roku posiadają najniższą cene minimalną 1 111 PLN, średnia cen samochodów wynosi 17 792 PLN.
+
 ## 1. Hipoteza 1 -\> marka nie ma wpływu na cenę.
 
 H0: Średnie (lub mediany) cen samochodów są takie same dla wszystkich marek. Marka nie ma wpływu na cenę auta. H1: Przynajmniej jedna marka ma inną medianę ceny niż pozostałe. Marka wpływa na cenę auta. α = 0,05
@@ -515,7 +537,7 @@ print(ad_test)
 
 ```
 
-```{r 31, echo=FALSE, message=FALSE, warning=FALSE}
+```{r 31, message=FALSE, warning=FALSE, include=FALSE}
 library(dunn.test)
 dunn_test <- dunn.test(samochody_new_rules$price_in_pln, samochody_new_rules$brand, method = "bonferroni")
 print(dunn_test)
@@ -544,7 +566,7 @@ ggplot(samochody_new_rules, aes(x = reorder(brand, price_in_pln, median), y = pr
 
 H0: Średnie (lub mediany) cen samochodów są takie same dla wszystkich lat wyprodukowania. Rok wyprodukowania nie ma wpływu na cenę auta. H1: Przynajmniej jeden rok wyprodukowania ma inną medianę ceny niż pozostałe. Rok wyprodukowania wpływa na cenę auta. α = 0,05
 
-```{r 33, echo=FALSE, message=FALSE, warning=FALSE}
+```{r 33, message=FALSE, warning=FALSE, include=FALSE}
 library(dunn.test)
 dunn_test <- dunn.test(samochody_new_rules$price_in_pln, samochody_new_rules$year, method = "bonferroni")
 print(dunn_test)
@@ -568,6 +590,6 @@ ggplot(samochody_new_rules, aes(x = reorder(year, price_in_pln, median), y = pri
   )
 ```
 
-# Podsumowanie wniosków.
+# Podsumowanie
 
 Najistotniejszy wpływ na cenę samochodu ma nazwa producenta- marka. Zgodnie z wykresem ukazanym w punkcie Statystyki opisowe- hipoteza 1, dostrzegamy, iż ceny aut marek takich jak Lamborghini, Ferrari czy Aston Martin sięgają powyżej 2 milionów złotych. Rozkłąd cen tych producentów jest szeroki, co sugeruje dużą zmienność w oferowanych modelach. Samochody klasy premium, takie jak Porshe, Land Rover, Mercedes- Benz, BMW i Maserati również charakteryzują się wysokimi cenami swoich samochodów, ale sięgają one średnio w granicy około 1 do 2 milionów złotych. Kolejno dostrzegamy marki popularne, do których należy Toyota, Volkswagen, Hyundai, Mazda czy Kia. Mają one ceny skoncentrowane w niższych przedziałach cenowych, średnio poniżej 1 miliona złotych, do około 300 tysięcy złotych. Poniżej ceny 300 tysięcy złotych zauważamy takie marki jak Daewoo, Citroen, Smart, które należą do grupy najtańszych aut z całego zbioru. Na wykresach hipotez 2 i 3 nie dostrzegamy aż tak wyraźnych różnic między przedziałami, jak w wykresie hipotezy 1. Na rozkład cen aut w zależności od przebiegu czy roku wyprodukowania nie jest tak jednoznaczny, jak wykres rozkładu cen ze względu na markę auta. Rozkład cen dla każdej marki ukazuje występowanie pojedyńczych bardzo drogich modeli aut, których jest niewiele, w porównaniu do aut niskobudżetowych. Zgodnie z wynikami wykresów hipotez, cena auta jest zależna od roku wyprodukowania i przebiegu, natomiast najistotniejszy wpływ na cenę auta ma jego nazwa producenta, czyli marka.
